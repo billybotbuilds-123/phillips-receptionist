@@ -1,3 +1,4 @@
+<mjml>
 <mj-head>
   <mj-title>Yesterday at Mr. Phillips's office</mj-title>
   <mj-preview>{{call_count}} calls · {{booking_count}} booked · {{followup_count}} follow-ups queued</mj-preview>
@@ -56,3 +57,4 @@
     </mj-column>
   </mj-section>
 </mj-body>
+</mjml>

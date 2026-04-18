@@ -1,3 +1,4 @@
+<mjml>
 <mj-head>
   <mj-title>URGENT — {{reason_label}}</mj-title>
   <mj-preview>{{parent_name}} · {{summary_first_sentence}}</mj-preview>
@@ -40,3 +41,4 @@
     </mj-column>
   </mj-section>
 </mj-body>
+</mjml>
