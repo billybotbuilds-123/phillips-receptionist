@@ -121,7 +121,7 @@ export async function authMiddleware(
   request: FastifyRequest,
   reply: FastifyReply,
 ): Promise<void> {
-  const sessionData = request.session.get("session") as { session_id: string; user_id: string } | undefined;
+  const sessionData = (request.session as unknown as { get(k: string): unknown }).get("session") as { session_id: string; user_id: string } | undefined;
 
   if (!sessionData?.session_id) {
     const next = encodeURIComponent(request.url);

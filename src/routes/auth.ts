@@ -60,14 +60,14 @@ export async function authRoutes(app: FastifyInstance): Promise<void> {
     await recordLoginAttempt(username, ip, true, user.id);
     const sessionId = await createSession(user.id, ip, request.headers["user-agent"]);
 
-    request.session.set("session", { session_id: sessionId, user_id: user.id });
+    (request.session as unknown as { set(k: string, v: unknown): void }).set("session", { session_id: sessionId, user_id: user.id });
 
     const next = (request.body as Record<string, string>)["next"] ?? "/admin";
     return reply.redirect(302, next.startsWith("/") ? next : "/admin");
   });
 
   app.post("/logout", async (request, reply) => {
-    const sessionData = request.session.get("session") as { session_id: string } | undefined;
+    const sessionData = (request.session as unknown as { get(k: string): unknown }).get("session") as { session_id: string } | undefined;
     if (sessionData?.session_id) {
       await deleteSession(sessionData.session_id);
     }

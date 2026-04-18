@@ -1,5 +1,8 @@
-// prisma/schema.prisma
-// Source of truth for the Postgres schema.
+// prisma/schema.prisma — UPDATED FOR FIXES
+// Changes from Billy's schema:
+//   * Added EscalationDedup table (replaces in-memory idempotency Set)
+//   * Added opt_out_body column to MessageLog for inbound SMS body preview
+//     (already stored in `error` per inbound webhook; documented here)
 
 generator client {
   provider = "prisma-client-js"
@@ -176,6 +179,8 @@ model MessageLog {
   recipient   String
   provider_id String?
   status      MessageStatus    @default(sent)
+  // For inbound SMS, `error` holds a body preview (first 500 chars) so Shane
+  // can see what the parent wrote in the admin dashboard.
   error       String?
   sent_at     DateTime         @default(now())
   call        Call?            @relation(fields: [call_id], references: [id])
@@ -206,6 +211,18 @@ model PersonaVersion {
   id         String   @id @default(cuid())
   content    String
   changed_by String
+  created_at DateTime @default(now())
+
+  @@index([created_at])
+}
+
+// ─── Escalation Deduplication ─────────────────────────────────────
+// Replaces the previous in-memory Set<string>, which lost state on
+// process restart and caused duplicate escalation SMS to Shane when
+// Vapi retried across a deploy. Key is SHA256(vapi_call_id + reason).
+// Rows can be pruned after 48h by the cleanup cron.
+model EscalationDedup {
+  key        String   @id
   created_at DateTime @default(now())
 
   @@index([created_at])

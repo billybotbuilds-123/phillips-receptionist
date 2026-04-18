@@ -1,6 +1,7 @@
 import { google } from "googleapis";
 import { settings } from "../lib/settings.js";
 import { logger } from "../lib/logger.js";
+import { renderTemplate } from "../lib/templates.js";
 import { readFileSync } from "fs";
 import { fileURLToPath } from "url";
 import { dirname, join } from "path";
@@ -16,14 +17,28 @@ function getTemplateContent(): string {
   }
 }
 
+// Singleton OAuth client. Reuses cached access tokens across calls instead
+// of forcing a fresh refresh on every single API invocation.
+let cachedAuth: import("google-auth-library").OAuth2Client | null = null;
+let cachedRefresh: string | null = null;
+let cachedClientId: string | null = null;
+
 async function getAuth() {
   const clientId = await settings.get("google_oauth_client_id");
   const clientSecret = await settings.get("google_oauth_client_secret");
   const refreshToken = await settings.get("google_oauth_refresh_token");
 
-  const auth = new google.auth.OAuth2(clientId, clientSecret);
-  auth.setCredentials({ refresh_token: refreshToken });
-  return auth;
+  if (
+    !cachedAuth ||
+    refreshToken !== cachedRefresh ||
+    clientId !== cachedClientId
+  ) {
+    cachedAuth = new google.auth.OAuth2(clientId, clientSecret);
+    cachedAuth.setCredentials({ refresh_token: refreshToken });
+    cachedRefresh = refreshToken;
+    cachedClientId = clientId;
+  }
+  return cachedAuth;
 }
 
 export interface CallDocData {
@@ -54,22 +69,26 @@ export async function createCallDoc(data: CallDocData): Promise<string> {
   });
   const title = `Call with ${data.parentName} — ${dateStr} PT`;
 
-  const template = getTemplateContent();
-  const content = template
-    .replace("{{parent_name}}", data.parentName)
-    .replace("{{parent_email}}", data.parentEmail)
-    .replace("{{parent_phone}}", data.parentPhone)
-    .replace("{{child_name}}", data.childName)
-    .replace("{{child_grade}}", data.childGrade)
-    .replace("{{summary_of_need}}", data.summaryOfNeed)
-    .replace("{{urgency_level}}", data.urgencyLevel)
-    .replace("{{call_date}}", dateStr);
+  // CRITICAL: use shared renderTemplate which replaces ALL occurrences.
+  // The template uses {{parent_name}} in both the title and the contact
+  // section. Previous String#replace(string, ...) only replaced the first
+  // occurrence, leaving literal "{{parent_name}}" in the body.
+  const content = renderTemplate(getTemplateContent(), {
+    parent_name: data.parentName,
+    parent_email: data.parentEmail,
+    parent_phone: data.parentPhone,
+    child_name: data.childName,
+    child_grade: data.childGrade,
+    summary_of_need: data.summaryOfNeed,
+    urgency_level: data.urgencyLevel,
+    call_date: dateStr,
+  });
 
   const createResp = await docs.documents.create({ requestBody: { title } });
   const docId = createResp.data.documentId;
   if (!docId) throw new Error("failed to create doc: no documentId");
 
-  // Move to folder
+  // Move to the configured folder.
   const file = await drive.files.get({ fileId: docId, fields: "parents" });
   const prevParents = (file.data.parents ?? []).join(",");
   await drive.files.update({
@@ -80,7 +99,6 @@ export async function createCallDoc(data: CallDocData): Promise<string> {
     fields: "id, parents",
   });
 
-  // Insert content
   if (content) {
     await docs.documents.batchUpdate({
       documentId: docId,

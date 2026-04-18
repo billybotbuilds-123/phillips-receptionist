@@ -21,7 +21,7 @@ export async function enqueueFailedJob(
   await db.failedJob.create({
     data: {
       type,
-      payload,
+      payload: payload as import("@prisma/client").Prisma.InputJsonValue,
       attempts: 0,
       next_retry_at: new Date(Date.now() + (BACKOFF_SCHEDULE_MS[0] ?? 60_000)),
     },
@@ -31,6 +31,40 @@ export async function enqueueFailedJob(
 export function nextRetryAt(attempts: number): Date {
   const delayMs = BACKOFF_SCHEDULE_MS[attempts] ?? BACKOFF_SCHEDULE_MS.at(-1) ?? 60_000;
   return new Date(Date.now() + delayMs);
+}
+
+/**
+ * Dedup key for an escalation. Reason is included so that, e.g., a crisis
+ * escalation followed by a booking-link-send-failed escalation on the same
+ * call both fire (different reasons) but two crisis escalations don't
+ * double-notify.
+ */
+export function urgentEscalationKey(vapiCallId: string, reason: string): string {
+  return sha256(`${vapiCallId}:${reason}`);
+}
+
+/**
+ * Persistent, cross-restart idempotency guard. Returns true if we can
+ * proceed (key was newly inserted), false if a previous invocation already
+ * marked this key as sent.
+ *
+ * Uses the unique primary key on EscalationDedup — the insert succeeds
+ * exactly once per (call, reason). Subsequent inserts throw P2002 (unique
+ * constraint violation), which we catch and interpret as "already sent".
+ */
+export async function tryClaimEscalation(key: string): Promise<boolean> {
+  try {
+    await db.escalationDedup.create({ data: { key } });
+    return true;
+  } catch (err) {
+    // Prisma unique-constraint error code is P2002. Any other error we want
+    // to surface by failing closed (don't double-send on a transient DB
+    // hiccup — better to miss than duplicate).
+    const code = (err as { code?: string }).code;
+    if (code === "P2002") return false;
+    logger.error({ err: String(err) }, "escalation dedup insert failed with unexpected error");
+    return false;
+  }
 }
 
 export async function sendUrgentEscalation(params: {
@@ -58,16 +92,9 @@ export async function sendUrgentEscalation(params: {
     other: "Other",
   };
   const reasonLabel = reasonLabels[params.reason] ?? params.reason;
-
   const summaryFirst120 = params.summary.slice(0, 120);
 
-  // SMS to Shane (no opt-out check — internal notification)
-  const smsBody = [
-    `URGENT [${params.reason}]: ${params.parentName ?? "unknown"} ${params.parentPhone ?? "no number"}`,
-    summaryFirst120,
-    `Dashboard: ${dashUrl}`,
-  ].join("\n");
-
+  // SMS to Shane (no opt-out check — internal notification).
   try {
     const smsResp = await sendSms({
       to: notifPhone,
@@ -93,10 +120,10 @@ export async function sendUrgentEscalation(params: {
       },
     });
   } catch (err) {
-    logger.error({ err }, "failed to send urgent escalation SMS");
+    logger.error({ err: String(err) }, "failed to send urgent escalation SMS");
   }
 
-  // Email to Shane
+  // Email to Shane.
   try {
     const emailResult = await sendEmail({
       to: notifEmail,
@@ -127,20 +154,6 @@ export async function sendUrgentEscalation(params: {
       },
     });
   } catch (err) {
-    logger.error({ err }, "failed to send urgent escalation email");
+    logger.error({ err: String(err) }, "failed to send urgent escalation email");
   }
-}
-
-export function urgentEscalationKey(vapiCallId: string, reason: string): string {
-  return sha256(`${vapiCallId}:${reason}`);
-}
-
-const sentEscalations = new Set<string>();
-
-export function markEscalationSent(key: string): void {
-  sentEscalations.add(key);
-}
-
-export function wasEscalationSent(key: string): boolean {
-  return sentEscalations.has(key);
 }

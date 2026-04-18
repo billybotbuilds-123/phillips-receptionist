@@ -1,5 +1,4 @@
 import type { FastifyInstance } from "fastify";
-import { z } from "zod";
 import { settings, SETTING_KEYS, type SettingKey } from "../../lib/settings.js";
 import { db } from "../../db/client.js";
 import { logger } from "../../lib/logger.js";
@@ -53,12 +52,10 @@ async function getTabData(tab: string): Promise<Record<string, string>> {
 }
 
 export async function adminSettingsRoutes(app: FastifyInstance): Promise<void> {
-  // Redirect /admin/settings → /admin/settings/core-ai
   app.get("/admin/settings", async (_req, reply) => {
     return reply.redirect(302, "/admin/settings/core-ai");
   });
 
-  // GET /admin/settings/:tab
   app.get("/admin/settings/:tab", async (request, reply) => {
     const { tab } = request.params as { tab: string };
     if (!TAB_SETTINGS[tab]) {
@@ -68,7 +65,7 @@ export async function adminSettingsRoutes(app: FastifyInstance): Promise<void> {
     const tabData = await getTabData(tab);
     const missingSettings = await settings.getMissingRequired();
 
-    let extraData: Record<string, unknown> = {};
+    const extraData: Record<string, unknown> = {};
 
     if (tab === "persona") {
       const override = await settings.get("riley_system_prompt_override").catch(() => "");
@@ -108,7 +105,6 @@ export async function adminSettingsRoutes(app: FastifyInstance): Promise<void> {
   // POST /admin/settings/:key — save a setting
   app.post("/admin/settings/:key", async (request, reply) => {
     const { key } = request.params as { key: string };
-
     if (!(SETTING_KEYS as readonly string[]).includes(key)) {
       return reply.status(400).send({ error: "unknown_key" });
     }
@@ -116,7 +112,6 @@ export async function adminSettingsRoutes(app: FastifyInstance): Promise<void> {
     const body = request.body as Record<string, string>;
     const value = body["value"] ?? "";
 
-    // Basic per-key validation
     const validationError = validateSettingValue(key as SettingKey, value);
     if (validationError) {
       return reply.status(400).send({ error: "validation_error", message: validationError });
@@ -124,12 +119,10 @@ export async function adminSettingsRoutes(app: FastifyInstance): Promise<void> {
 
     await settings.set(key as SettingKey, value, request.user!.username, request.ip);
 
-    // If persona key, save version history
     if (key === "riley_system_prompt_override" && value) {
       await db.personaVersion.create({
         data: { content: value, changed_by: request.user!.username },
       });
-      // Keep only last 10 versions
       const allVersions = await db.personaVersion.findMany({
         orderBy: { created_at: "desc" },
       });
@@ -142,98 +135,123 @@ export async function adminSettingsRoutes(app: FastifyInstance): Promise<void> {
     return reply.send({ ok: true });
   });
 
-  // POST /admin/test-connection/:service
-  app.post("/admin/test-connection/:service", async (request, reply) => {
-    const { service } = request.params as { service: string };
-
-    if (!(SERVICES as readonly string[]).includes(service)) {
-      return reply.status(400).send({ error: "unknown_service" });
-    }
-
-    const start = Date.now();
-    let result: { ok: boolean; latency_ms?: number; detail?: string; error?: string };
-
-    try {
-      switch (service as Service) {
-        case "anthropic":
-          result = await anthropicService.testConnection();
-          break;
-        case "vapi":
-          result = await vapiService.testConnection();
-          break;
-        case "twilio": {
-          const info = await twilioService.getAccountInfo();
-          result = { ok: true, latency_ms: Date.now() - start, detail: `Status: ${info.status} · Balance: $${info.balance}` };
-          break;
-        }
-        case "elevenlabs":
-          result = await elevenlabsService.testConnection();
-          break;
-        case "calendly": {
-          const user = await calendlyService.getCurrentUser();
-          result = { ok: true, latency_ms: Date.now() - start, detail: user.name };
-          break;
-        }
-        case "google": {
-          const { expiresInSeconds, scopes } = await googleDocsService.refreshAccessToken();
-          result = {
-            ok: true,
-            latency_ms: Date.now() - start,
-            detail: `Token valid, expires in ${expiresInSeconds}s · Scopes: ${scopes.split(" ").length}`,
-          };
-          break;
-        }
-        case "stripe": {
-          const stripeKey = await settings.get("stripe_secret_key");
-          const resp = await fetch("https://api.stripe.com/v1/balance", {
-            headers: { Authorization: `Bearer ${stripeKey}` },
-          });
-          if (!resp.ok) throw new Error(`Stripe returned ${resp.status}`);
-          result = { ok: true, latency_ms: Date.now() - start };
-          break;
-        }
-        default:
-          return reply.status(400).send({ error: "unknown_service" });
-      }
-    } catch (err) {
-      result = { ok: false, latency_ms: Date.now() - start, error: String(err).slice(0, 200) };
-    }
-
-    await db.connectionTest.create({
-      data: {
-        service,
-        ok: result.ok,
-        latency_ms: result.latency_ms ?? null,
-        error: result.error ?? null,
-        tested_by: request.user!.username,
+  // POST /admin/test-connection/:service — rate-limited
+  app.post(
+    "/admin/test-connection/:service",
+    {
+      config: {
+        rateLimit: { max: 20, timeWindow: "1 minute" },
       },
-    });
+    },
+    async (request, reply) => {
+      const { service } = request.params as { service: string };
+      if (!(SERVICES as readonly string[]).includes(service)) {
+        return reply.status(400).send({ error: "unknown_service" });
+      }
 
-    return reply.send(result);
-  });
+      const start = Date.now();
+      let result: { ok: boolean; latency_ms?: number; detail?: string; error?: string };
 
-  // POST /admin/settings/vapi/rotate-secret
+      try {
+        switch (service as Service) {
+          case "anthropic":
+            result = await anthropicService.testConnection();
+            break;
+          case "vapi":
+            result = await vapiService.testConnection();
+            break;
+          case "twilio": {
+            const info = await twilioService.getAccountInfo();
+            result = {
+              ok: true,
+              latency_ms: Date.now() - start,
+              detail: `Status: ${info.status} · Balance: $${info.balance}`,
+            };
+            break;
+          }
+          case "elevenlabs":
+            result = await elevenlabsService.testConnection();
+            break;
+          case "calendly": {
+            const user = await calendlyService.getCurrentUser();
+            result = { ok: true, latency_ms: Date.now() - start, detail: user.name };
+            break;
+          }
+          case "google": {
+            const { expiresInSeconds, scopes } = await googleDocsService.refreshAccessToken();
+            result = {
+              ok: true,
+              latency_ms: Date.now() - start,
+              detail: `Token valid, expires in ${expiresInSeconds}s · Scopes: ${scopes.split(" ").length}`,
+            };
+            break;
+          }
+          case "stripe": {
+            const stripeKey = await settings.get("stripe_secret_key");
+            const resp = await fetch("https://api.stripe.com/v1/balance", {
+              headers: { Authorization: `Bearer ${stripeKey}` },
+            });
+            if (!resp.ok) throw new Error(`Stripe returned ${resp.status}`);
+            result = { ok: true, latency_ms: Date.now() - start };
+            break;
+          }
+          default:
+            return reply.status(400).send({ error: "unknown_service" });
+        }
+      } catch (err) {
+        result = { ok: false, latency_ms: Date.now() - start, error: String(err).slice(0, 200) };
+      }
+
+      await db.connectionTest.create({
+        data: {
+          service,
+          ok: result.ok,
+          latency_ms: result.latency_ms ?? null,
+          error: result.error ?? null,
+          tested_by: request.user!.username,
+        },
+      });
+
+      return reply.send(result);
+    },
+  );
+
   app.post("/admin/settings/vapi/rotate-secret", async (request, reply) => {
     const newSecret = generateHexKey(32);
     await settings.set("vapi_webhook_secret", newSecret, request.user!.username, request.ip);
     return reply.send({ ok: true, new_secret: newSecret });
   });
 
-  // GET /admin/settings/reveal/:key — return raw value for 10-second reveal
-  app.get("/admin/settings/reveal/:key", async (request, reply) => {
-    const { key } = request.params as { key: string };
-    if (!(SETTING_KEYS as readonly string[]).includes(key)) {
-      return reply.status(400).send({ error: "unknown_key" });
-    }
-    try {
-      const value = await settings.get(key as SettingKey);
-      return reply.send({ value });
-    } catch {
-      return reply.send({ value: "" });
-    }
-  });
+  // GET /admin/settings/reveal/:key — HEAVILY rate-limited.
+  // Returns raw secret values; an XSS foothold plus an un-rate-limited reveal
+  // endpoint would enumerate every secret in a loop. Cap at 20/minute.
+  app.get(
+    "/admin/settings/reveal/:key",
+    {
+      config: {
+        rateLimit: { max: 20, timeWindow: "1 minute" },
+      },
+    },
+    async (request, reply) => {
+      const { key } = request.params as { key: string };
+      if (!(SETTING_KEYS as readonly string[]).includes(key)) {
+        return reply.status(400).send({ error: "unknown_key" });
+      }
+      try {
+        const value = await settings.get(key as SettingKey);
+        // Audit log every reveal so Shane can see if something automated is
+        // iterating through secret keys.
+        logger.info(
+          { user: request.user?.username, key, ip: request.ip },
+          "settings reveal",
+        );
+        return reply.send({ value });
+      } catch {
+        return reply.send({ value: "" });
+      }
+    },
+  );
 
-  // GET /admin/settings/audit
   app.get("/admin/settings/audit", async (request, reply) => {
     const page = parseInt((request.query as Record<string, string>)["page"] ?? "1");
     const pageSize = 50;
@@ -253,7 +271,6 @@ export async function adminSettingsRoutes(app: FastifyInstance): Promise<void> {
     });
   });
 
-  // POST /admin/settings/persona/apply-to-vapi
   app.post("/admin/settings/persona/apply-to-vapi", async (request, reply) => {
     try {
       const override = await settings.get("riley_system_prompt_override").catch(() => "");
@@ -268,71 +285,93 @@ export async function adminSettingsRoutes(app: FastifyInstance): Promise<void> {
       await vapiService.updateAssistantSystemPrompt(firstAssistant.id, override);
       return reply.send({ ok: true });
     } catch (err) {
-      logger.error({ err }, "failed to apply persona to vapi");
+      logger.error({ err: String(err) }, "failed to apply persona to vapi");
       return reply.status(500).send({ error: "vapi_update_failed", message: String(err) });
     }
   });
 
-  // POST /admin/settings/persona/revert
   app.post("/admin/settings/persona/revert", async (request, reply) => {
     await settings.set("riley_system_prompt_override", "", request.user!.username, request.ip);
     return reply.send({ ok: true });
   });
 
-  // POST /admin/settings/persona/restore/:versionId
   app.post("/admin/settings/persona/restore/:versionId", async (request, reply) => {
     const { versionId } = request.params as { versionId: string };
     const version = await db.personaVersion.findUnique({ where: { id: versionId } });
     if (!version) return reply.status(404).send({ error: "not_found" });
 
-    await settings.set("riley_system_prompt_override", version.content, request.user!.username, request.ip);
+    await settings.set(
+      "riley_system_prompt_override",
+      version.content,
+      request.user!.username,
+      request.ip,
+    );
     await db.personaVersion.create({
       data: { content: version.content, changed_by: `${request.user!.username} (restore)` },
     });
     return reply.send({ ok: true });
   });
 
-  // POST /admin/test-notification — send test notification
-  app.post("/admin/test-notification", async (request, reply) => {
-    const notifEmail = await settings.get("shane_notification_email");
-    const notifPhone = await settings.get("shane_notification_phone");
+  // POST /admin/test-notification — RATE LIMITED.
+  // Each call sends a real SMS (costs money) and real email. A buggy frontend
+  // in a loop would burn through Twilio balance fast. Cap at 5/minute.
+  app.post(
+    "/admin/test-notification",
+    {
+      config: {
+        rateLimit: { max: 5, timeWindow: "1 minute" },
+      },
+    },
+    async (_request, reply) => {
+      const notifEmail = await settings.get("shane_notification_email");
+      const notifPhone = await settings.get("shane_notification_phone");
 
-    const { sendEmail: gmailSend } = await import("../../services/gmail.js");
-    const { sendSms: twilioSend } = await import("../../services/twilio.js");
+      const { sendEmail: gmailSend } = await import("../../services/gmail.js");
+      const { sendSms: twilioSend } = await import("../../services/twilio.js");
 
-    await Promise.allSettled([
-      gmailSend({
-        to: notifEmail,
-        subject: "Test from Phillips Receptionist",
-        templateName: "test-email",
-        vars: { message: "Test from Phillips Receptionist — all systems working." },
-      }),
-      twilioSend({
-        to: notifPhone,
-        templateName: "urgent-to-shane",
-        vars: {
-          reason: "test",
-          parent_name: "Test",
-          parent_phone: "n/a",
-          summary_first_120_chars: "Test from Phillips Receptionist — all systems working.",
-          short_dashboard_url: "",
-        },
-      }),
-    ]);
+      await Promise.allSettled([
+        gmailSend({
+          to: notifEmail,
+          subject: "Test from Phillips Receptionist",
+          templateName: "test-email",
+          vars: { message: "Test from Phillips Receptionist — all systems working." },
+        }),
+        twilioSend({
+          to: notifPhone,
+          templateName: "urgent-to-shane",
+          vars: {
+            reason: "test",
+            parent_name: "Test",
+            parent_phone: "n/a",
+            summary_first_120_chars: "Test from Phillips Receptionist — all systems working.",
+            short_dashboard_url: "",
+          },
+        }),
+      ]);
 
-    return reply.send({ ok: true });
-  });
+      return reply.send({ ok: true });
+    },
+  );
 
-  // POST /admin/settings/persona/affirmation-preview
-  app.post("/admin/settings/persona/affirmation-preview", async (request, reply) => {
-    const bio = await settings.get("mr_phillips_bio").catch(() => "");
-    const lines = await anthropicService.generateAffirmationPreview(bio);
-    return reply.send({ lines });
-  });
+  // POST /admin/settings/persona/affirmation-preview — rate-limited.
+  // Spends Anthropic tokens per call.
+  app.post(
+    "/admin/settings/persona/affirmation-preview",
+    {
+      config: {
+        rateLimit: { max: 10, timeWindow: "1 minute" },
+      },
+    },
+    async (_request, reply) => {
+      const bio = await settings.get("mr_phillips_bio").catch(() => "");
+      const lines = await anthropicService.generateAffirmationPreview(bio);
+      return reply.send({ lines });
+    },
+  );
 }
 
 function validateSettingValue(key: SettingKey, value: string): string | null {
-  if (!value) return null; // empty is allowed (clears setting)
+  if (!value) return null;
 
   switch (key) {
     case "anthropic_api_key":

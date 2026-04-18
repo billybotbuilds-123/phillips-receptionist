@@ -5,7 +5,8 @@ import { logger } from "./logger.js";
 export const SETTING_KEYS = [
   "anthropic_api_key",
   "vapi_api_key",
-  "vapi_webhook_secret",
+  "vapi_webhook_secret", // signs /vapi/call-ended webhook
+  "vapi_mcp_secret",     // Bearer token Vapi sends on /mcp tool calls
   "twilio_account_sid",
   "twilio_auth_token",
   "twilio_phone_number",
@@ -82,7 +83,12 @@ async function get<K extends SettingKey>(key: K): Promise<string> {
   return value;
 }
 
-async function set(key: SettingKey, value: string, updatedBy: string, ip?: string): Promise<void> {
+async function set(
+  key: SettingKey,
+  value: string,
+  updatedBy: string,
+  ip?: string,
+): Promise<void> {
   let oldHash: string | null = null;
   try {
     const existing = await db.setting.findUnique({ where: { key } });
@@ -141,7 +147,7 @@ async function getAll(): Promise<Record<string, string>> {
         auth_tag: row.auth_tag,
       });
     } catch (err) {
-      logger.error({ setting_key: row.key, err }, "failed to decrypt setting");
+      logger.error({ setting_key: row.key, err: String(err) }, "failed to decrypt setting");
     }
   }
   return result;
@@ -173,6 +179,7 @@ async function getMissingRequired(): Promise<SettingKey[]> {
     "anthropic_api_key",
     "vapi_api_key",
     "vapi_webhook_secret",
+    "vapi_mcp_secret",
     "twilio_account_sid",
     "twilio_auth_token",
     "twilio_phone_number",
@@ -202,4 +209,12 @@ async function getMissingRequired(): Promise<SettingKey[]> {
   return missing;
 }
 
-export const settings = { get, set, getAll, isPresent, getMasked, getMissingRequired, invalidate };
+export const settings = {
+  get,
+  set,
+  getAll,
+  isPresent,
+  getMasked,
+  getMissingRequired,
+  invalidate,
+};

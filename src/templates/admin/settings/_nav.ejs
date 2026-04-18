@@ -1,0 +1,19 @@
+<nav>
+  <% const SETTINGS_TABS = [
+    {slug:'core-ai',label:'Core AI'},
+    {slug:'phone',label:'Phone & SMS'},
+    {slug:'voice',label:'Voice'},
+    {slug:'google',label:'Google'},
+    {slug:'scheduling',label:'Scheduling'},
+    {slug:'payments',label:'Payments'},
+    {slug:'business-info',label:'Business Info'},
+    {slug:'notifications',label:'Notifications'},
+    {slug:'persona',label:"Riley's Persona"},
+    {slug:'account',label:'Account'},
+  ]; %>
+  <% for (const t of SETTINGS_TABS) { %>
+    <a href="/admin/settings/<%= t.slug %>" class="<%= tab === t.slug ? 'active' : '' %>"><%= t.label %></a>
+  <% } %>
+  <hr style="margin:1rem 0;" />
+  <a href="/admin/settings/audit" style="font-size:0.85rem;color:var(--pico-muted-color);">Audit log</a>
+</nav>

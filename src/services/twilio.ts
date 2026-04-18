@@ -18,12 +18,27 @@ function renderTemplate(template: string, vars: Record<string, string>): string 
   return template.replace(/\{\{(\w+)\}\}/g, (_, key: string) => vars[key] ?? "");
 }
 
+// Lazy-initialized client cached per (sid, token) pair.
+let cachedClient: ReturnType<typeof twilio> | null = null;
+let cachedSid: string | null = null;
+let cachedToken: string | null = null;
+
 async function getClient() {
   const accountSid = await settings.get("twilio_account_sid");
   const authToken = await settings.get("twilio_auth_token");
-  return twilio(accountSid, authToken);
+  if (!cachedClient || accountSid !== cachedSid || authToken !== cachedToken) {
+    cachedClient = twilio(accountSid, authToken);
+    cachedSid = accountSid;
+    cachedToken = authToken;
+  }
+  return cachedClient;
 }
 
+/**
+ * A number is opted-out if we have ANY inbound message from it flagged as
+ * an opt-out. The inbound SMS webhook writes MessageLog rows with
+ * template = "stop" when the body matches opt-out patterns.
+ */
 export async function isOptedOut(phone: string): Promise<boolean> {
   const stopMsg = await db.messageLog.findFirst({
     where: {
@@ -68,7 +83,10 @@ export async function sendSms(params: {
 
   const start = Date.now();
   const msg = await client.messages.create({ from, to: params.to, body });
-  logger.info({ template: params.templateName, latencyMs: Date.now() - start }, "sms sent");
+  logger.info(
+    { template: params.templateName, latencyMs: Date.now() - start },
+    "sms sent",
+  );
 
   return { sid: msg.sid };
 }
@@ -86,7 +104,6 @@ export async function getA2pStatus(): Promise<string> {
     const client = await getClient();
     const services = await client.messaging.v1.services.list({ limit: 10 });
     if (services.length === 0) return "not_registered";
-    // Check first service for brand registration status
     const firstService = services[0];
     if (!firstService) return "not_registered";
     return "approved"; // simplified; full A2P check needs brand registry API

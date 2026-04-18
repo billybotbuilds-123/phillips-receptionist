@@ -1,38 +1,57 @@
-<%- include('../settings/layout.ejs', {body: `
-<h3>Phone & SMS</h3>
-<p style="color:var(--pico-muted-color);font-size:0.9rem;">Twilio credentials and the ported phone number. A2P 10DLC registration is required for SMS in the US.</p>
+<% locals.currentPage = 'settings'; locals.title = 'Phone & SMS'; %>
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
+  <h2 style="margin:0;">Settings</h2>
+  <small style="color:var(--pico-muted-color);">All changes are saved encrypted.</small>
+</div>
+<% if (missingCount > 0) { %>
+<div class="top-banner">⚠️ <strong><%= missingCount %> setting<%= missingCount === 1 ? '' : 's' %> still need configuration</strong></div>
+<% } %>
+<div class="settings-layout">
+  <div class="settings-sidebar"><%- include('./_nav') %></div>
+  <div class="settings-content">
 
-<div class="field-row">
-  <label>Twilio Account SID <% if (!tabData.twilio_account_sid) { %><span class="missing-badge">required</span><% } %></label>
-  <div class="field-actions">
-    <input type="text" data-key="twilio_account_sid" value="<%= tabData.twilio_account_sid || '' %>" class="reveal-field" style="flex:1;font-family:monospace;" />
-    <button data-reveal-key="twilio_account_sid" class="secondary outline">Reveal</button>
-    <button data-save-key="twilio_account_sid">Save</button>
+    <h3 style="margin-top:0;">Phone & SMS</h3>
+    <p style="color:var(--pico-muted-color);font-size:0.9rem;">Twilio credentials and the ported phone number. A2P 10DLC registration is required for SMS in the US.</p>
+
+    <div class="field-row">
+      <label>Twilio Account SID
+        <% if (missingSettings.includes('twilio_account_sid')) { %><span class="missing-badge">required</span><% } %>
+      </label>
+      <div class="field-actions">
+        <input type="text" data-key="twilio_account_sid" value="<%= tabData['twilio_account_sid'] || '' %>" class="reveal-field" style="flex:1;font-family:monospace;" />
+        <button type="button" data-reveal-key="twilio_account_sid" class="secondary outline">Reveal</button>
+        <button type="button" data-save-key="twilio_account_sid">Save</button>
+      </div>
+      <div data-feedback="twilio_account_sid" class="field-feedback"></div>
+    </div>
+
+    <div class="field-row">
+      <label>Twilio Auth Token
+        <% if (missingSettings.includes('twilio_auth_token')) { %><span class="missing-badge">required</span><% } %>
+      </label>
+      <div class="field-actions">
+        <input type="text" data-key="twilio_auth_token" value="<%= tabData['twilio_auth_token'] || '' %>" class="reveal-field" style="flex:1;font-family:monospace;" />
+        <button type="button" data-reveal-key="twilio_auth_token" class="secondary outline">Reveal</button>
+        <button type="button" data-save-key="twilio_auth_token">Save</button>
+      </div>
+      <div data-feedback="twilio_auth_token" class="field-feedback"></div>
+    </div>
+
+    <div class="field-row">
+      <label>Phone number (E.164)
+        <% if (missingSettings.includes('twilio_phone_number')) { %><span class="missing-badge">required</span><% } %>
+      </label>
+      <div class="field-actions">
+        <input type="text" data-key="twilio_phone_number" value="<%= tabData['twilio_phone_number'] || '' %>" placeholder="+15622704221" style="flex:1;" />
+        <button type="button" data-save-key="twilio_phone_number">Save</button>
+      </div>
+      <div data-feedback="twilio_phone_number" class="field-feedback"></div>
+    </div>
+
+    <div style="display:flex;gap:0.75rem;flex-wrap:wrap;margin-top:1.5rem;align-items:center;">
+      <button type="button" data-test-service="twilio">Test Twilio</button>
+      <span data-test-result="twilio" style="font-size:0.85rem;"></span>
+    </div>
+
   </div>
-  <div data-feedback="twilio_account_sid" class="field-feedback"></div>
 </div>
-
-<div class="field-row">
-  <label>Twilio Auth Token <% if (!tabData.twilio_auth_token) { %><span class="missing-badge">required</span><% } %></label>
-  <div class="field-actions">
-    <input type="text" data-key="twilio_auth_token" value="<%= tabData.twilio_auth_token || '' %>" class="reveal-field" style="flex:1;font-family:monospace;" />
-    <button data-reveal-key="twilio_auth_token" class="secondary outline">Reveal</button>
-    <button data-save-key="twilio_auth_token">Save</button>
-  </div>
-  <div data-feedback="twilio_auth_token" class="field-feedback"></div>
-</div>
-
-<div class="field-row">
-  <label>Phone number (E.164) <% if (!tabData.twilio_phone_number) { %><span class="missing-badge">required</span><% } %></label>
-  <div class="field-actions">
-    <input type="text" data-key="twilio_phone_number" value="<%= tabData.twilio_phone_number || '' %>" placeholder="+15622704221" style="flex:1;" />
-    <button data-save-key="twilio_phone_number">Save</button>
-  </div>
-  <div data-feedback="twilio_phone_number" class="field-feedback"></div>
-</div>
-
-<div style="display:flex;gap:0.75rem;flex-wrap:wrap;margin-top:1.5rem;align-items:center;">
-  <button data-test-service="twilio">Test Twilio</button>
-  <span data-test-result="twilio" style="font-size:0.85rem;"></span>
-</div>
-`) %>

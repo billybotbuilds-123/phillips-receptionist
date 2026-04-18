@@ -1,50 +1,62 @@
-<%- include('../settings/layout.ejs', {body: `
-<h3>Riley's Persona</h3>
-
-<div style="background:#fff3cd;border:1px solid #ffc107;border-radius:6px;padding:0.75rem 1rem;margin-bottom:1.5rem;">
-  ⚠️ <strong>Changes take effect on the next call.</strong> You are editing Riley's behavior in production. Test by calling yourself before a parent does.
+<% locals.currentPage = 'settings'; locals.title = "Riley's Persona"; %>
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
+  <h2 style="margin:0;">Settings</h2>
+  <small style="color:var(--pico-muted-color);">All changes are saved encrypted.</small>
 </div>
-
-<div class="field-row">
-  <label>System prompt override <small style="color:var(--pico-muted-color);">(blank = use committed default)</small></label>
-  <textarea data-key="riley_system_prompt_override" rows="20" style="width:100%;font-family:monospace;font-size:0.85rem;"><%= tabData.riley_system_prompt_override || '' %></textarea>
-  <div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-top:0.75rem;">
-    <button id="apply-vapi-btn">Apply to Vapi</button>
-    <button data-save-key="riley_system_prompt_override" class="secondary">Save only</button>
-    <button id="revert-btn" class="secondary contrast">Revert to default</button>
-  </div>
-  <div data-feedback="riley_system_prompt_override" class="field-feedback"></div>
-  <div id="vapi-apply-result" style="margin-top:0.5rem;font-size:0.85rem;"></div>
-</div>
-
-<% if (typeof versions !== 'undefined' && versions.length > 0) { %>
-<h4>Version history <small style="color:var(--pico-muted-color);">(last 10)</small></h4>
-<table>
-  <thead><tr><th>Saved</th><th>By</th><th>Preview</th><th></th></tr></thead>
-  <tbody>
-  <% for (const v of versions) { %>
-    <tr>
-      <td style="font-size:0.85rem;white-space:nowrap;"><%= new Date(v.created_at).toLocaleString('en-US', {timeZone:'America/Los_Angeles'}) %></td>
-      <td style="font-size:0.85rem;"><%= v.changed_by %></td>
-      <td style="font-size:0.85rem;max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-family:monospace;"><%= v.content.slice(0,80) %>…</td>
-      <td><button onclick="restoreVersion('<%= v.id %>')" class="secondary outline" style="padding:0.25rem 0.5rem;font-size:0.8rem;">Restore</button></td>
-    </tr>
-  <% } %>
-  </tbody>
-</table>
+<% if (missingCount > 0) { %>
+<div class="top-banner">⚠️ <strong><%= missingCount %> setting<%= missingCount === 1 ? '' : 's' %> still need configuration</strong></div>
 <% } %>
+<div class="settings-layout">
+  <div class="settings-sidebar"><%- include('./_nav') %></div>
+  <div class="settings-content">
 
+    <h3 style="margin-top:0;">Riley's Persona</h3>
+
+    <div style="background:#fff3cd;border:1px solid #ffc107;border-radius:6px;padding:0.75rem 1rem;margin-bottom:1.5rem;">
+      ⚠️ <strong>Changes take effect on the next call.</strong> You are editing Riley's behavior in production. Test by calling yourself before a parent does.
+    </div>
+
+    <div class="field-row">
+      <label>System prompt override <small style="color:var(--pico-muted-color);">(blank = use committed default)</small></label>
+      <textarea data-key="riley_system_prompt_override" rows="20" style="width:100%;font-family:monospace;font-size:0.85rem;"><%= tabData['riley_system_prompt_override'] || '' %></textarea>
+      <div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-top:0.75rem;">
+        <button type="button" id="apply-vapi-btn">Apply to Vapi</button>
+        <button type="button" data-save-key="riley_system_prompt_override" class="secondary">Save only</button>
+        <button type="button" id="revert-btn" class="secondary contrast">Revert to default</button>
+      </div>
+      <div data-feedback="riley_system_prompt_override" class="field-feedback"></div>
+      <div id="vapi-apply-result" style="margin-top:0.5rem;font-size:0.85rem;"></div>
+    </div>
+
+    <% if (typeof versions !== 'undefined' && versions.length > 0) { %>
+    <h4>Version history <small style="color:var(--pico-muted-color);">(last 10)</small></h4>
+    <table>
+      <thead><tr><th>Saved</th><th>By</th><th>Preview</th><th></th></tr></thead>
+      <tbody>
+      <% for (const v of versions) { %>
+        <tr>
+          <td style="font-size:0.85rem;white-space:nowrap;"><%= new Date(v.created_at).toLocaleString('en-US', {timeZone:'America/Los_Angeles'}) %></td>
+          <td style="font-size:0.85rem;"><%= v.changed_by %></td>
+          <td style="font-size:0.85rem;max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-family:monospace;"><%= v.content.slice(0,80) %>…</td>
+          <td><button type="button" onclick="restoreVersion('<%= v.id %>')" class="secondary outline" style="padding:0.25rem 0.5rem;font-size:0.8rem;">Restore</button></td>
+        </tr>
+      <% } %>
+      </tbody>
+    </table>
+    <% } %>
+
+  </div>
+</div>
 <script>
-document.getElementById('apply-vapi-btn')?.addEventListener('click', async () => {
-  const btn = event.target;
+document.getElementById('apply-vapi-btn')?.addEventListener('click', async (e) => {
+  const btn = e.currentTarget;
   btn.disabled = true; btn.textContent = 'Applying…';
-  // First save
   const textarea = document.querySelector('[data-key="riley_system_prompt_override"]');
   await fetch('/admin/settings/riley_system_prompt_override', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({value: textarea?.value || ''})});
-  // Then apply to Vapi
   const resp = await fetch('/admin/settings/persona/apply-to-vapi', {method:'POST'});
   const data = await resp.json();
-  document.getElementById('vapi-apply-result').textContent = resp.ok ? '✓ Applied to Vapi' : '✗ ' + (data.message || 'Failed');
+  const el = document.getElementById('vapi-apply-result');
+  if (el) el.textContent = resp.ok ? '✓ Applied to Vapi' : '✗ ' + (data.message || 'Failed');
   btn.disabled = false; btn.textContent = 'Apply to Vapi';
 });
 
@@ -60,4 +72,3 @@ async function restoreVersion(id) {
   window.location.reload();
 }
 </script>
-`) %>
