@@ -1,0 +1,60 @@
+<mj-head>
+  <mj-title>Your scheduling link — Mr. Phillips</mj-title>
+  <mj-preview>15-minute consultation, $30. Pick any time that works.</mj-preview>
+  <mj-attributes>
+    <mj-all font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" />
+    <mj-text line-height="1.55" font-size="16px" color="#2b2b2b" />
+    <mj-button background-color="#2b5cdc" color="#ffffff" border-radius="8px" font-size="16px" font-weight="500" padding="14px 24px" />
+  </mj-attributes>
+</mj-head>
+<mj-body background-color="#f5f3ef">
+  <mj-section background-color="#ffffff" padding="32px 24px 8px" border-radius="12px 12px 0 0">
+    <mj-column>
+      <mj-text font-size="14px" color="#6b6b68" padding-bottom="4px">Mr. Phillips's office</mj-text>
+      <mj-text font-size="22px" font-weight="500" color="#1a1a18" padding-top="0">Hi {{parent_name}} —</mj-text>
+    </mj-column>
+  </mj-section>
+
+  <mj-section background-color="#ffffff" padding="0 24px">
+    <mj-column>
+      <mj-text>
+        Thanks for calling today. Here's the link to book your consultation with Mr. Phillips — pick any time that works for {{child_name}} and your family:
+      </mj-text>
+      <mj-button href="{{calendly_url}}" align="left">Schedule your consultation</mj-button>
+      <mj-text font-size="14px" color="#6b6b68">
+        Or paste this into your browser: <a href="{{calendly_url}}" style="color:#2b5cdc;">{{calendly_url}}</a>
+      </mj-text>
+    </mj-column>
+  </mj-section>
+
+  <mj-section background-color="#faf7f1" padding="16px 24px" border-left="3px solid #d4c69f">
+    <mj-column>
+      <mj-text font-size="14px" color="#4a4535">
+        <strong>What to expect:</strong> A {{consultation_duration_minutes}}-minute call with Mr. Phillips for ${{consultation_fee_dollars}}, paid when you book. He uses this time to understand what's going on and figure out whether he's the right fit to help.
+      </mj-text>
+    </mj-column>
+  </mj-section>
+
+  <mj-section background-color="#ffffff" padding="8px 24px 24px">
+    <mj-column>
+      <mj-text font-size="15px" color="#4a4a48">
+        If the link gets buried, I'll send a reminder tomorrow. If you've decided it's not for you, just reply with "no thanks" and I won't write again.
+      </mj-text>
+    </mj-column>
+  </mj-section>
+
+  <mj-section background-color="#ffffff" padding="0 24px 24px" border-radius="0 0 12px 12px">
+    <mj-column>
+      <mj-text color="#1a1a18">Warmly,<br/>Riley<br/><span style="color:#6b6b68;font-size:14px;">at Mr. Phillips's office</span></mj-text>
+    </mj-column>
+  </mj-section>
+
+  <mj-section padding="16px 24px">
+    <mj-column>
+      <mj-text font-size="12px" color="#8a8a85" align="center">
+        Mr. Phillips's office · Long Beach, CA · <a href="tel:+15622704221" style="color:#8a8a85;">562-270-4221</a><br/>
+        You received this email because you called our office today. <a href="{{privacy_url}}" style="color:#8a8a85;">Privacy notice</a>.
+      </mj-text>
+    </mj-column>
+  </mj-section>
+</mj-body>

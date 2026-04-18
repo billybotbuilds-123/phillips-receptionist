@@ -1,0 +1,3 @@
+Hi {{parent_name}}, this is Riley from Mr. Phillips's office. Here's the link to book your consultation (15 min, ${{consultation_fee_dollars}}): {{calendly_url}}
+
+Reply STOP to opt out.

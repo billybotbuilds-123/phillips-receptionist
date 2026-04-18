@@ -1,0 +1,38 @@
+<% locals.title = 'Settings audit log'; locals.currentPage = 'settings'; %>
+<h2>Settings audit log</h2>
+<p style="color:var(--pico-muted-color);font-size:0.9rem;">Hashes confirm whether a value changed without revealing the value itself.</p>
+
+<div style="overflow-x:auto;">
+<table>
+  <thead>
+    <tr>
+      <th>When</th>
+      <th>Who</th>
+      <th>IP</th>
+      <th>Setting</th>
+      <th>Old hash</th>
+      <th>New hash</th>
+    </tr>
+  </thead>
+  <tbody>
+  <% for (const row of rows) { %>
+    <tr>
+      <td style="font-size:0.8rem;white-space:nowrap;"><%= new Date(row.created_at).toLocaleString('en-US', {timeZone:'America/Los_Angeles'}) %></td>
+      <td><%= row.changed_by %></td>
+      <td><%= row.ip || '—' %></td>
+      <td style="font-family:monospace;font-size:0.85rem;"><%= row.setting_key %></td>
+      <td style="font-family:monospace;font-size:0.75rem;color:var(--pico-muted-color);"><%= row.old_hash ? row.old_hash.slice(0,12)+'…' : '(new)' %></td>
+      <td style="font-family:monospace;font-size:0.75rem;"><%= row.new_hash.slice(0,12)+'…' %></td>
+    </tr>
+  <% } %>
+  </tbody>
+</table>
+</div>
+
+<% if (totalPages > 1) { %>
+<nav style="display:flex;gap:0.5rem;margin-top:1rem;">
+  <% for (let p = 1; p <= totalPages; p++) { %>
+    <a href="?page=<%= p %>" style="<%= p === page ? 'font-weight:bold;' : '' %>"><%= p %></a>
+  <% } %>
+</nav>
+<% } %>

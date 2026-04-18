@@ -1,0 +1,46 @@
+<%- include('../settings/layout.ejs', {body: `
+<h3>Voice (ElevenLabs)</h3>
+<p style="color:var(--pico-muted-color);font-size:0.9rem;">Changing the voice ID takes effect on the next call — no redeploy needed.</p>
+
+<div class="field-row">
+  <label>ElevenLabs API key <% if (!tabData.elevenlabs_api_key) { %><span class="missing-badge">required</span><% } %></label>
+  <div class="field-actions">
+    <input type="text" data-key="elevenlabs_api_key" value="<%= tabData.elevenlabs_api_key || '' %>" class="reveal-field" style="flex:1;font-family:monospace;" />
+    <button data-reveal-key="elevenlabs_api_key" class="secondary outline">Reveal</button>
+    <button data-save-key="elevenlabs_api_key">Save</button>
+  </div>
+  <div data-feedback="elevenlabs_api_key" class="field-feedback"></div>
+</div>
+
+<div class="field-row">
+  <label>Voice ID <% if (!tabData.elevenlabs_voice_id) { %><span class="missing-badge">required</span><% } %></label>
+  <div class="field-actions">
+    <input type="text" data-key="elevenlabs_voice_id" value="<%= tabData.elevenlabs_voice_id || '' %>" placeholder="20-char alphanumeric" style="flex:1;font-family:monospace;" />
+    <button data-save-key="elevenlabs_voice_id">Save</button>
+  </div>
+  <div data-feedback="elevenlabs_voice_id" class="field-feedback"></div>
+</div>
+
+<div style="display:flex;gap:0.75rem;flex-wrap:wrap;margin-top:1.5rem;align-items:center;">
+  <button data-test-service="elevenlabs">Test ElevenLabs</button>
+  <button id="preview-voice-btn" class="secondary">Preview voice</button>
+  <span data-test-result="elevenlabs" style="font-size:0.85rem;"></span>
+</div>
+<div id="preview-audio-container" style="margin-top:1rem;"></div>
+
+<script>
+document.getElementById('preview-voice-btn')?.addEventListener('click', async () => {
+  const btn = document.getElementById('preview-voice-btn');
+  btn.disabled = true; btn.textContent = 'Generating…';
+  const resp = await fetch('/admin/elevenlabs/preview', {method:'POST'});
+  if (resp.ok) {
+    const blob = await resp.blob();
+    const url = URL.createObjectURL(blob);
+    document.getElementById('preview-audio-container').innerHTML = '<audio controls autoplay src="'+url+'"></audio>';
+  } else {
+    document.getElementById('preview-audio-container').textContent = 'Preview failed.';
+  }
+  btn.disabled = false; btn.textContent = 'Preview voice';
+});
+</script>
+`) %>

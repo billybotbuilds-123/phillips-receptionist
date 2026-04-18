@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login — Riley Admin</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css" />
+  <style>
+    body { display: flex; align-items: center; justify-content: center; min-height: 100vh; background: #f5f3ef; }
+    .login-card { width: 360px; background: #fff; border-radius: 12px; padding: 2rem; box-shadow: 0 2px 16px rgba(0,0,0,0.08); }
+  </style>
+</head>
+<body>
+<div class="login-card">
+  <h2 style="margin-top:0;">Riley Admin</h2>
+  <% if (typeof error !== 'undefined' && error) { %>
+    <div style="color:#842029;background:#f8d7da;border-radius:6px;padding:0.75rem;margin-bottom:1rem;font-size:0.9rem;"><%- error %></div>
+  <% } %>
+  <form method="POST" action="/login">
+    <input type="hidden" name="next" value="<%= typeof next !== 'undefined' ? next : '/admin' %>" />
+    <label>
+      Username
+      <input type="text" name="username" autocomplete="username" required />
+    </label>
+    <label>
+      Password
+      <input type="password" name="password" autocomplete="current-password" required />
+    </label>
+    <button type="submit" style="width:100%;">Log in</button>
+  </form>
+  <p style="font-size:0.85rem;margin-top:1rem;text-align:center;">
+    <a href="/forgot-password">Forgot password?</a>
+  </p>
+</div>
+</body>
+</html>

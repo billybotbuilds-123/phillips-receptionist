@@ -1,0 +1,38 @@
+<%- include('../settings/layout.ejs', {body: `
+<h3>Scheduling (Calendly)</h3>
+<p style="color:var(--pico-muted-color);font-size:0.9rem;">The $30 consultation fee is collected by Calendly's native Stripe integration at booking time.</p>
+
+<div class="field-row">
+  <label>Calendly API token <% if (!tabData.calendly_api_token) { %><span class="missing-badge">required</span><% } %></label>
+  <div class="field-actions">
+    <input type="text" data-key="calendly_api_token" value="<%= tabData.calendly_api_token || '' %>" class="reveal-field" style="flex:1;font-family:monospace;" />
+    <button data-reveal-key="calendly_api_token" class="secondary outline">Reveal</button>
+    <button data-save-key="calendly_api_token">Save</button>
+  </div>
+  <div data-feedback="calendly_api_token" class="field-feedback"></div>
+</div>
+
+<div class="field-row">
+  <label>Webhook signing key <% if (!tabData.calendly_webhook_signing_key) { %><span class="missing-badge">required</span><% } %></label>
+  <div class="field-actions">
+    <input type="text" data-key="calendly_webhook_signing_key" value="<%= tabData.calendly_webhook_signing_key || '' %>" class="reveal-field" style="flex:1;font-family:monospace;" />
+    <button data-reveal-key="calendly_webhook_signing_key" class="secondary outline">Reveal</button>
+    <button data-save-key="calendly_webhook_signing_key">Save</button>
+  </div>
+  <div data-feedback="calendly_webhook_signing_key" class="field-feedback"></div>
+</div>
+
+<div class="field-row">
+  <label>Event type URI <% if (!tabData.calendly_event_type_uri) { %><span class="missing-badge">required</span><% } %></label>
+  <div class="field-actions">
+    <input type="text" data-key="calendly_event_type_uri" value="<%= tabData.calendly_event_type_uri || '' %>" style="flex:1;" />
+    <button data-save-key="calendly_event_type_uri">Save</button>
+  </div>
+  <div data-feedback="calendly_event_type_uri" class="field-feedback"></div>
+</div>
+
+<div style="display:flex;gap:0.75rem;flex-wrap:wrap;margin-top:1.5rem;align-items:center;">
+  <button data-test-service="calendly">Test Calendly</button>
+  <span data-test-result="calendly" style="font-size:0.85rem;"></span>
+</div>
+`) %>

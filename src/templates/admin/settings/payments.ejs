@@ -1,0 +1,19 @@
+<%- include('../settings/layout.ejs', {body: `
+<h3>Payments (Stripe)</h3>
+<p style="color:var(--pico-muted-color);font-size:0.9rem;">Stripe is optional for v1. Add a key for revenue tracking. The actual payment flow runs through Calendly.</p>
+
+<div class="field-row">
+  <label>Stripe secret key</label>
+  <div class="field-actions">
+    <input type="text" data-key="stripe_secret_key" value="<%= tabData.stripe_secret_key || '' %>" class="reveal-field" style="flex:1;font-family:monospace;" />
+    <button data-reveal-key="stripe_secret_key" class="secondary outline">Reveal</button>
+    <button data-save-key="stripe_secret_key">Save</button>
+  </div>
+  <div data-feedback="stripe_secret_key" class="field-feedback"></div>
+</div>
+
+<div style="display:flex;gap:0.75rem;flex-wrap:wrap;margin-top:1.5rem;align-items:center;">
+  <button data-test-service="stripe">Test Stripe</button>
+  <span data-test-result="stripe" style="font-size:0.85rem;"></span>
+</div>
+`) %>

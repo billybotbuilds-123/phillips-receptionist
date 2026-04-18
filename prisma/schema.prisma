@@ -1,0 +1,212 @@
+// prisma/schema.prisma
+// Source of truth for the Postgres schema.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Settings ─────────────────────────────────────────────────────
+
+model Setting {
+  key             String   @id
+  encrypted_value Bytes
+  iv              Bytes
+  auth_tag        Bytes
+  updated_at      DateTime @updatedAt
+  updated_by      String
+}
+
+model SettingsAuditLog {
+  id          String   @id @default(cuid())
+  setting_key String
+  changed_by  String
+  ip          String?
+  old_hash    String?
+  new_hash    String
+  created_at  DateTime @default(now())
+
+  @@index([setting_key, created_at])
+}
+
+model ConnectionTest {
+  id         String   @id @default(cuid())
+  service    String
+  ok         Boolean
+  latency_ms Int?
+  error      String?
+  tested_at  DateTime @default(now())
+  tested_by  String
+
+  @@index([service, tested_at])
+}
+
+// ─── Auth ─────────────────────────────────────────────────────────
+
+model User {
+  id             String               @id @default(cuid())
+  username       String               @unique
+  password_hash  String
+  email          String?
+  created_at     DateTime             @default(now())
+  sessions       Session[]
+  login_attempts LoginAttempt[]
+  reset_tokens   PasswordResetToken[]
+}
+
+model Session {
+  id         String   @id @default(cuid())
+  user_id    String
+  expires_at DateTime
+  ip         String?
+  user_agent String?
+  user       User     @relation(fields: [user_id], references: [id])
+
+  @@index([expires_at])
+}
+
+model LoginAttempt {
+  id             String   @id @default(cuid())
+  user_id        String?
+  username_tried String
+  ip             String
+  success        Boolean
+  created_at     DateTime @default(now())
+  user           User?    @relation(fields: [user_id], references: [id])
+
+  @@index([ip, created_at])
+  @@index([user_id, created_at])
+}
+
+model PasswordResetToken {
+  id         String    @id @default(cuid())
+  user_id    String
+  token_hash String    @unique
+  expires_at DateTime
+  used_at    DateTime?
+  created_at DateTime  @default(now())
+  user       User      @relation(fields: [user_id], references: [id])
+
+  @@index([user_id])
+  @@index([expires_at])
+}
+
+// ─── Calls ────────────────────────────────────────────────────────
+
+enum UrgencyLevel {
+  low
+  medium
+  high
+  crisis
+}
+
+enum MessageChannel {
+  email
+  sms
+}
+
+enum MessageDirection {
+  outbound
+  inbound
+}
+
+enum MessageStatus {
+  sent
+  delivered
+  failed
+  bounced
+  blocked_opt_out
+}
+
+model Call {
+  id                    String        @id @default(cuid())
+  vapi_call_id          String        @unique
+  started_at            DateTime      @default(now())
+  ended_at              DateTime?
+  duration_seconds      Int?
+
+  parent_name           String?
+  parent_email          String?
+  parent_phone          String?
+  child_name            String?
+  child_grade           String?
+  summary_of_need       String?
+  urgency_level         UrgencyLevel?
+
+  doc_url               String?
+  doc_creation_failed   Boolean       @default(false)
+  booking_email_sent_at DateTime?
+  booking_sms_sent_at   DateTime?
+
+  follow_up_due_at      DateTime?
+  follow_up_sent_at     DateTime?
+  follow_up_skipped     Boolean       @default(false)
+
+  booked_at             DateTime?
+  canceled_at           DateTime?
+  calendly_event_uri    String?
+
+  escalated             Boolean       @default(false)
+  escalation_reason     String?
+
+  raw_transcript        String?
+  recording_url         String?
+
+  flagged               Boolean       @default(false)
+  flag_note             String?
+
+  messages              MessageLog[]
+
+  @@index([started_at])
+  @@index([follow_up_due_at, booked_at, follow_up_sent_at])
+  @@index([flagged])
+  @@index([parent_email])
+}
+
+model MessageLog {
+  id          String           @id @default(cuid())
+  call_id     String?
+  channel     MessageChannel
+  direction   MessageDirection
+  template    String
+  recipient   String
+  provider_id String?
+  status      MessageStatus    @default(sent)
+  error       String?
+  sent_at     DateTime         @default(now())
+  call        Call?            @relation(fields: [call_id], references: [id])
+
+  @@index([call_id])
+  @@index([sent_at])
+  @@index([recipient, direction])
+}
+
+// ─── Reliability ──────────────────────────────────────────────────
+
+model FailedJob {
+  id            String    @id @default(cuid())
+  type          String
+  payload       Json
+  attempts      Int       @default(0)
+  last_error    String?
+  next_retry_at DateTime
+  completed_at  DateTime?
+  created_at    DateTime  @default(now())
+
+  @@index([next_retry_at, completed_at])
+}
+
+// ─── Persona Versioning ───────────────────────────────────────────
+
+model PersonaVersion {
+  id         String   @id @default(cuid())
+  content    String
+  changed_by String
+  created_at DateTime @default(now())
+
+  @@index([created_at])
+}

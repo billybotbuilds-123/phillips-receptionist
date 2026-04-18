@@ -1,0 +1,51 @@
+{
+  "name": "phillips-receptionist",
+  "version": "2.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "worker": "tsx watch src/worker.ts",
+    "build": "tsc --noEmit && mjml src/templates/emails/*.mjml -o src/templates/emails/",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "bootstrap": "tsx scripts/bootstrap.ts",
+    "db:migrate": "prisma migrate deploy",
+    "db:generate": "prisma generate"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.36.0",
+    "@fastify/cookie": "^9.4.0",
+    "@fastify/csrf-protection": "^6.4.1",
+    "@fastify/formbody": "^7.4.0",
+    "@fastify/multipart": "^8.3.1",
+    "@fastify/rate-limit": "^9.1.0",
+    "@fastify/secure-session": "^7.3.0",
+    "@fastify/static": "^7.0.4",
+    "@fastify/view": "^9.1.0",
+    "@prisma/client": "^5.22.0",
+    "@sentry/node": "^8.45.0",
+    "archiver": "^7.0.1",
+    "bcrypt": "^5.1.1",
+    "ejs": "^3.1.10",
+    "fastify": "^4.28.1",
+    "googleapis": "^144.0.0",
+    "mjml": "^4.15.3",
+    "node-cron": "^3.0.3",
+    "pino": "^9.5.0",
+    "twilio": "^5.3.7",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/archiver": "^6.0.3",
+    "@types/bcrypt": "^5.0.2",
+    "@types/ejs": "^3.1.5",
+    "@types/mjml": "^4.7.4",
+    "@types/node": "^22.10.0",
+    "@types/node-cron": "^3.0.11",
+    "prisma": "^5.22.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8"
+  }
+}

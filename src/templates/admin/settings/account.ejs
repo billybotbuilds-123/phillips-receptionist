@@ -1,0 +1,71 @@
+<%- include('../settings/layout.ejs', {body: `
+<h3>Account</h3>
+
+<h4>Change password</h4>
+<form id="change-password-form" style="max-width:400px;">
+  <label>Current password<input type="password" id="current-password" required /></label>
+  <label>New password<input type="password" id="new-password" required minlength="8" /></label>
+  <label>Confirm new password<input type="password" id="confirm-password" required /></label>
+  <button type="submit">Change password</button>
+  <div id="password-result" style="margin-top:0.5rem;font-size:0.85rem;"></div>
+</form>
+
+<% if (typeof sessions !== 'undefined' && sessions.length > 0) { %>
+<h4 style="margin-top:2rem;">Active sessions</h4>
+<table>
+  <thead><tr><th>Created</th><th>Last IP</th><th></th></tr></thead>
+  <tbody>
+  <% for (const s of sessions) { %>
+    <tr>
+      <td style="font-size:0.85rem;"><%= new Date(s.expires_at).toLocaleString('en-US', {timeZone:'America/Los_Angeles'}) %></td>
+      <td style="font-size:0.85rem;"><%= s.ip || '—' %></td>
+      <td><button onclick="revokeSession('<%= s.id %>')" class="secondary outline" style="padding:0.25rem 0.5rem;font-size:0.8rem;">Revoke</button></td>
+    </tr>
+  <% } %>
+  </tbody>
+</table>
+<% } %>
+
+<% if (typeof loginActivity !== 'undefined' && loginActivity.length > 0) { %>
+<h4 style="margin-top:2rem;">Recent login activity</h4>
+<table>
+  <thead><tr><th>Time</th><th>IP</th><th>Result</th></tr></thead>
+  <tbody>
+  <% for (const a of loginActivity) { %>
+    <tr>
+      <td style="font-size:0.85rem;"><%= new Date(a.created_at).toLocaleString('en-US', {timeZone:'America/Los_Angeles'}) %></td>
+      <td style="font-size:0.85rem;"><%= a.ip %></td>
+      <td><span class="badge <%= a.success ? 'badge-success' : 'badge-danger' %>"><%= a.success ? 'success' : 'failed' %></span></td>
+    </tr>
+  <% } %>
+  </tbody>
+</table>
+<% } %>
+
+<script>
+document.getElementById('change-password-form')?.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const newPw = document.getElementById('new-password').value;
+  const confirmPw = document.getElementById('confirm-password').value;
+  if (newPw !== confirmPw) {
+    document.getElementById('password-result').textContent = 'Passwords do not match.';
+    return;
+  }
+  const resp = await fetch('/admin/account/change-password', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({
+      current_password: document.getElementById('current-password').value,
+      new_password: newPw
+    })
+  });
+  const data = await resp.json();
+  document.getElementById('password-result').textContent = resp.ok ? '✓ Password changed.' : '✗ ' + (data.message || 'Failed');
+});
+
+async function revokeSession(id) {
+  await fetch('/admin/account/revoke-session/' + id, {method:'POST'});
+  window.location.reload();
+}
+</script>
+`) %>

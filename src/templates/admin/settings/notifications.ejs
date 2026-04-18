@@ -1,0 +1,55 @@
+<%- include('../settings/layout.ejs', {body: `
+<h3>Notifications</h3>
+<p style="color:var(--pico-muted-color);font-size:0.9rem;">Quiet hours delay routine follow-up SMS, but NOT urgent escalations.</p>
+
+<div class="field-row">
+  <label>Notification email <% if (!tabData.shane_notification_email) { %><span class="missing-badge">required</span><% } %></label>
+  <div class="field-actions">
+    <input type="email" data-key="shane_notification_email" value="<%= tabData.shane_notification_email || '' %>" style="flex:1;" />
+    <button data-save-key="shane_notification_email">Save</button>
+  </div>
+  <div data-feedback="shane_notification_email" class="field-feedback"></div>
+</div>
+
+<div class="field-row">
+  <label>Notification phone (E.164) <% if (!tabData.shane_notification_phone) { %><span class="missing-badge">required</span><% } %></label>
+  <div class="field-actions">
+    <input type="text" data-key="shane_notification_phone" value="<%= tabData.shane_notification_phone || '' %>" placeholder="+15621234567" style="flex:1;" />
+    <button data-save-key="shane_notification_phone">Save</button>
+  </div>
+  <div data-feedback="shane_notification_phone" class="field-feedback"></div>
+</div>
+
+<div class="field-row">
+  <label>Quiet hours start (HH:MM, leave blank to disable)</label>
+  <div class="field-actions">
+    <input type="text" data-key="quiet_hours_start" value="<%= tabData.quiet_hours_start || '' %>" placeholder="22:00" style="flex:1;" />
+    <button data-save-key="quiet_hours_start">Save</button>
+  </div>
+  <div data-feedback="quiet_hours_start" class="field-feedback"></div>
+</div>
+
+<div class="field-row">
+  <label>Quiet hours end (HH:MM)</label>
+  <div class="field-actions">
+    <input type="text" data-key="quiet_hours_end" value="<%= tabData.quiet_hours_end || '' %>" placeholder="08:00" style="flex:1;" />
+    <button data-save-key="quiet_hours_end">Save</button>
+  </div>
+  <div data-feedback="quiet_hours_end" class="field-feedback"></div>
+</div>
+
+<div style="margin-top:1.5rem;">
+  <button id="test-notif-btn">Send test notification</button>
+  <span id="test-notif-result" style="margin-left:1rem;font-size:0.85rem;"></span>
+</div>
+
+<script>
+document.getElementById('test-notif-btn')?.addEventListener('click', async () => {
+  const btn = event.target;
+  btn.disabled = true; btn.textContent = 'Sending…';
+  const resp = await fetch('/admin/test-notification', {method:'POST'});
+  document.getElementById('test-notif-result').textContent = resp.ok ? '✓ Sent!' : '✗ Failed';
+  btn.disabled = false; btn.textContent = 'Send test notification';
+});
+</script>
+`) %>

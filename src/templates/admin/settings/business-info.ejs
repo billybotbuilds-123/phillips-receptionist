@@ -1,0 +1,58 @@
+<%- include('../settings/layout.ejs', {body: `
+<h3>Business Info</h3>
+<p style="color:var(--pico-muted-color);font-size:0.9rem;">The business data Riley references on calls and emails use in templates.</p>
+
+<div class="field-row">
+  <label>Consultation fee (cents) <% if (!tabData.consultation_fee_cents) { %><span class="missing-badge">required</span><% } %></label>
+  <div class="field-actions">
+    <input type="number" data-key="consultation_fee_cents" value="<%= tabData.consultation_fee_cents || '' %>" min="0" step="1" style="flex:1;" />
+    <button data-save-key="consultation_fee_cents">Save</button>
+  </div>
+  <small style="color:var(--pico-muted-color);">3000 = $30.00</small>
+  <div data-feedback="consultation_fee_cents" class="field-feedback"></div>
+</div>
+
+<div class="field-row">
+  <label>Consultation duration (minutes) <% if (!tabData.consultation_duration_minutes) { %><span class="missing-badge">required</span><% } %></label>
+  <div class="field-actions">
+    <input type="number" data-key="consultation_duration_minutes" value="<%= tabData.consultation_duration_minutes || '15' %>" min="1" max="180" style="flex:1;" />
+    <button data-save-key="consultation_duration_minutes">Save</button>
+  </div>
+  <div data-feedback="consultation_duration_minutes" class="field-feedback"></div>
+</div>
+
+<div class="field-row">
+  <label>Timezone <% if (!tabData.timezone) { %><span class="missing-badge">required</span><% } %></label>
+  <div class="field-actions">
+    <input type="text" data-key="timezone" value="<%= tabData.timezone || 'America/Los_Angeles' %>" style="flex:1;" />
+    <button data-save-key="timezone">Save</button>
+  </div>
+  <div data-feedback="timezone" class="field-feedback"></div>
+</div>
+
+<div class="field-row">
+  <label>Mr. Phillips's bio <% if (!tabData.mr_phillips_bio) { %><span class="missing-badge">required</span><% } %></label>
+  <textarea data-key="mr_phillips_bio" rows="5" style="width:100%;" placeholder="Mr. Phillips has 14 years of experience…"><%= tabData.mr_phillips_bio || '' %></textarea>
+  <div style="display:flex;gap:0.5rem;margin-top:0.5rem;">
+    <button data-save-key="mr_phillips_bio">Save</button>
+    <button id="preview-affirmation-btn" class="secondary">Preview Riley's affirmation</button>
+  </div>
+  <div data-feedback="mr_phillips_bio" class="field-feedback"></div>
+</div>
+
+<div id="affirmation-preview" style="background:var(--pico-card-background-color);border:1px solid var(--pico-muted-border-color);border-radius:6px;padding:1rem;margin-top:1rem;display:none;"></div>
+
+<script>
+document.getElementById('preview-affirmation-btn')?.addEventListener('click', async () => {
+  const btn = event.target;
+  btn.disabled = true; btn.textContent = 'Generating…';
+  const resp = await fetch('/admin/settings/persona/affirmation-preview', {method:'POST'});
+  const data = await resp.json();
+  const container = document.getElementById('affirmation-preview');
+  container.style.display = '';
+  container.innerHTML = '<strong>Example affirmations Riley might say:</strong><ul>' +
+    (data.lines || []).map(l => '<li>' + l + '</li>').join('') + '</ul>';
+  btn.disabled = false; btn.textContent = "Preview Riley's affirmation";
+});
+</script>
+`) %>

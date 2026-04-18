@@ -1,0 +1,56 @@
+<%- include('../settings/layout.ejs', {body: `
+<h3>Google</h3>
+<p style="color:var(--pico-muted-color);font-size:0.9rem;">Riley creates one Google Doc per call. Make sure the folder exists and the account has access.</p>
+
+<div class="field-row">
+  <label>OAuth Client ID <% if (!tabData.google_oauth_client_id) { %><span class="missing-badge">required</span><% } %></label>
+  <div class="field-actions">
+    <input type="text" data-key="google_oauth_client_id" value="<%= tabData.google_oauth_client_id || '' %>" style="flex:1;" />
+    <button data-save-key="google_oauth_client_id">Save</button>
+  </div>
+  <div data-feedback="google_oauth_client_id" class="field-feedback"></div>
+</div>
+
+<div class="field-row">
+  <label>OAuth Client Secret <% if (!tabData.google_oauth_client_secret) { %><span class="missing-badge">required</span><% } %></label>
+  <div class="field-actions">
+    <input type="text" data-key="google_oauth_client_secret" value="<%= tabData.google_oauth_client_secret || '' %>" class="reveal-field" style="flex:1;font-family:monospace;" />
+    <button data-reveal-key="google_oauth_client_secret" class="secondary outline">Reveal</button>
+    <button data-save-key="google_oauth_client_secret">Save</button>
+  </div>
+  <div data-feedback="google_oauth_client_secret" class="field-feedback"></div>
+</div>
+
+<div class="field-row">
+  <label>Refresh Token <% if (!tabData.google_oauth_refresh_token) { %><span class="missing-badge">required</span><% } %></label>
+  <div class="field-actions">
+    <input type="text" data-key="google_oauth_refresh_token" value="<%= tabData.google_oauth_refresh_token || '' %>" class="reveal-field" style="flex:1;font-family:monospace;" />
+    <button data-reveal-key="google_oauth_refresh_token" class="secondary outline">Reveal</button>
+    <button data-save-key="google_oauth_refresh_token">Save</button>
+  </div>
+  <div data-feedback="google_oauth_refresh_token" class="field-feedback"></div>
+</div>
+
+<div class="field-row">
+  <label>Sender email <% if (!tabData.google_sender_email) { %><span class="missing-badge">required</span><% } %></label>
+  <div class="field-actions">
+    <input type="email" data-key="google_sender_email" value="<%= tabData.google_sender_email || '' %>" style="flex:1;" />
+    <button data-save-key="google_sender_email">Save</button>
+  </div>
+  <div data-feedback="google_sender_email" class="field-feedback"></div>
+</div>
+
+<div class="field-row">
+  <label>Drive folder ID for call notes <% if (!tabData.google_drive_notes_folder_id) { %><span class="missing-badge">required</span><% } %></label>
+  <div class="field-actions">
+    <input type="text" data-key="google_drive_notes_folder_id" value="<%= tabData.google_drive_notes_folder_id || '' %>" style="flex:1;font-family:monospace;" />
+    <button data-save-key="google_drive_notes_folder_id">Save</button>
+  </div>
+  <div data-feedback="google_drive_notes_folder_id" class="field-feedback"></div>
+</div>
+
+<div style="display:flex;gap:0.75rem;flex-wrap:wrap;margin-top:1.5rem;align-items:center;">
+  <button data-test-service="google">Test Google OAuth</button>
+  <span data-test-result="google" style="font-size:0.85rem;"></span>
+</div>
+`) %>

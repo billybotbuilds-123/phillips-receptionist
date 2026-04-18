@@ -1,0 +1,83 @@
+<% locals.title = 'Dashboard'; locals.currentPage = 'dashboard'; %>
+
+<% if (missingCount > 0) { %>
+<div class="top-banner">
+  ⚠️ <strong><%= missingCount %> setting<%= missingCount === 1 ? '' : 's' %> need configuration</strong> —
+  <a href="/admin/settings/core-ai">Go to settings</a>
+</div>
+<% } %>
+
+<h2 style="margin-top:0;">Today at a glance</h2>
+
+<div class="stat-grid">
+  <div class="stat-card">
+    <div class="stat-value"><%= todayCalls %></div>
+    <div class="stat-label">calls</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-value"><%= todayLinksCount %></div>
+    <div class="stat-label">links sent</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-value" style="color:#2b5cdc;"><%= todayBookings %></div>
+    <div class="stat-label">booked</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-value" style="color:#c84a2e;"><%= todayEscalations %></div>
+    <div class="stat-label">escalations</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-value">$<%= todayRevenue %></div>
+    <div class="stat-label">est. revenue</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-value" style="<%= pendingFollowUps > 0 ? 'color:#856404;' : '' %>"><%= pendingFollowUps %></div>
+    <div class="stat-label">pending follow-ups</div>
+  </div>
+</div>
+
+<h3>Recent calls</h3>
+<% if (recentCalls.length === 0) { %>
+  <p style="color:var(--pico-muted-color);">No calls yet.</p>
+<% } else { %>
+<div style="overflow-x:auto;">
+<table>
+  <thead>
+    <tr>
+      <th>Time</th>
+      <th>Parent</th>
+      <th>Grade</th>
+      <th>Urgency</th>
+      <th>Status</th>
+      <th>Links</th>
+    </tr>
+  </thead>
+  <tbody>
+  <% for (const call of recentCalls) { %>
+    <tr>
+      <td style="white-space:nowrap;font-size:0.85rem;"><%= new Date(call.started_at).toLocaleString('en-US', {timeZone:'America/Los_Angeles',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}) %></td>
+      <td><a href="/admin/calls/<%= call.id %>"><%= call.parent_name || '(unknown)' %></a>
+        <% if (call.flagged) { %><span class="badge badge-danger" title="<%= call.flag_note || '' %>">⚑</span><% } %>
+      </td>
+      <td><%= call.child_grade || '—' %></td>
+      <td>
+        <% const urgencyColors = {low:'badge-info',medium:'badge-warning',high:'badge-danger',crisis:'badge-danger'}; %>
+        <% if (call.urgency_level) { %><span class="badge <%= urgencyColors[call.urgency_level] || '' %>"><%= call.urgency_level %></span><% } else { %>—<% } %>
+      </td>
+      <td>
+        <% if (call.booked_at) { %><span class="badge badge-success">booked</span>
+        <% } else if (call.escalated) { %><span class="badge badge-danger">escalated</span>
+        <% } else { %><span class="badge badge-warning">pending</span><% } %>
+      </td>
+      <td style="white-space:nowrap;">
+        <% if (call.doc_url) { %><a href="<%= call.doc_url %>" target="_blank" rel="noopener" style="font-size:0.85rem;">Doc</a><% } %>
+        <% if (call.recording_url) { %> · <a href="<%= call.recording_url %>" target="_blank" rel="noopener" style="font-size:0.85rem;">🎙</a><% } %>
+      </td>
+    </tr>
+  <% } %>
+  </tbody>
+</table>
+</div>
+<% } %>
+
+<p style="margin-top:1rem;"><a href="/admin/calls">View all calls →</a></p>

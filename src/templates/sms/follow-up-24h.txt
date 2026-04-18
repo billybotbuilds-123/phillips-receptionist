@@ -1,0 +1,3 @@
+Hi {{parent_name}}, Riley here — just checking in. Here's Mr. Phillips's scheduling link again in case it got buried: {{calendly_url}}
+
+No pressure. Reply STOP to opt out.

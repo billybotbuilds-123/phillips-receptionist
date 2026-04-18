@@ -1,0 +1,97 @@
+<% locals.title = 'Call detail'; locals.currentPage = 'calls'; %>
+<div style="display:flex;align-items:center;gap:1rem;margin-bottom:1.5rem;">
+  <a href="/admin/calls">← Back to calls</a>
+  <h2 style="margin:0;"><%= call.parent_name || 'Unknown caller' %></h2>
+  <% if (call.urgency_level) { %>
+    <% const urgencyColors = {low:'badge-info',medium:'badge-warning',high:'badge-danger',crisis:'badge-danger'}; %>
+    <span class="badge <%= urgencyColors[call.urgency_level] || '' %>"><%= call.urgency_level %></span>
+  <% } %>
+  <% if (call.escalated) { %><span class="badge badge-danger">escalated</span><% } %>
+  <% if (call.flagged) { %><span class="badge badge-danger">⚑ flagged</span><% } %>
+</div>
+
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:2rem;">
+  <div>
+    <h4>Contact</h4>
+    <table>
+      <tr><th>Parent</th><td><%= call.parent_name || '—' %></td></tr>
+      <tr><th>Email</th><td><%= call.parent_email || '—' %></td></tr>
+      <tr><th>Phone</th><td><%= call.parent_phone || '—' %></td></tr>
+      <tr><th>Child</th><td><%= call.child_name || '—' %></td></tr>
+      <tr><th>Grade</th><td><%= call.child_grade || '—' %></td></tr>
+    </table>
+  </div>
+  <div>
+    <h4>Call metadata</h4>
+    <table>
+      <tr><th>Started</th><td><%= new Date(call.started_at).toLocaleString('en-US', {timeZone:'America/Los_Angeles'}) %></td></tr>
+      <tr><th>Ended</th><td><%= call.ended_at ? new Date(call.ended_at).toLocaleString('en-US', {timeZone:'America/Los_Angeles'}) : '—' %></td></tr>
+      <tr><th>Duration</th><td><%= call.duration_seconds ? Math.floor(call.duration_seconds/60)+'m '+call.duration_seconds%60+'s' : '—' %></td></tr>
+      <tr><th>Vapi Call ID</th><td style="font-size:0.8rem;font-family:monospace;"><%= call.vapi_call_id %></td></tr>
+      <tr><th>Booked</th><td><%= call.booked_at ? new Date(call.booked_at).toLocaleString('en-US', {timeZone:'America/Los_Angeles'}) : '—' %></td></tr>
+      <tr><th>Escalation</th><td><%= call.escalation_reason || '—' %></td></tr>
+    </table>
+  </div>
+</div>
+
+<% if (call.summary_of_need) { %>
+<h4>Summary of need</h4>
+<p style="background:var(--pico-card-background-color);border:1px solid var(--pico-muted-border-color);border-radius:6px;padding:1rem;white-space:pre-wrap;"><%= call.summary_of_need %></p>
+<% } %>
+
+<div style="display:flex;gap:1rem;flex-wrap:wrap;margin-bottom:1.5rem;">
+  <% if (call.doc_url) { %><a href="<%= call.doc_url %>" target="_blank" rel="noopener" role="button" style="font-size:0.9rem;">Open Google Doc</a><% } %>
+  <% if (call.recording_url) { %><a href="<%= call.recording_url %>" target="_blank" rel="noopener" role="button" class="secondary" style="font-size:0.9rem;">🎙 Recording</a><% } %>
+</div>
+
+<% if (call.recording_url) { %>
+<h4>Recording</h4>
+<audio controls src="<%= call.recording_url %>" style="width:100%;margin-bottom:1.5rem;"></audio>
+<% } %>
+
+<h4>Actions</h4>
+<div style="display:flex;gap:1rem;flex-wrap:wrap;margin-bottom:1.5rem;">
+  <button onclick="sendFollowUp('<%= call.id %>')" class="secondary">Send manual follow-up</button>
+</div>
+
+<h4>Flag this call</h4>
+<div style="display:flex;gap:0.5rem;align-items:center;margin-bottom:1.5rem;">
+  <input type="text" id="flag-note" placeholder="Flag note" style="flex:1;margin:0;" value="<%= call.flag_note || '' %>" />
+  <button onclick="flagCall('<%= call.id %>')">Flag</button>
+</div>
+
+<h4>Messages</h4>
+<% if (call.messages && call.messages.length > 0) { %>
+<table>
+  <thead><tr><th>Time</th><th>Channel</th><th>Template</th><th>Status</th></tr></thead>
+  <tbody>
+  <% for (const msg of call.messages) { %>
+    <tr>
+      <td style="font-size:0.85rem;"><%= new Date(msg.sent_at).toLocaleString('en-US', {timeZone:'America/Los_Angeles'}) %></td>
+      <td><%= msg.channel %></td>
+      <td><%= msg.template %></td>
+      <td><span class="badge <%= msg.status === 'sent' || msg.status === 'delivered' ? 'badge-success' : 'badge-danger' %>"><%= msg.status %></span></td>
+    </tr>
+  <% } %>
+  </tbody>
+</table>
+<% } else { %><p style="color:var(--pico-muted-color);">No messages logged.</p><% } %>
+
+<% if (call.raw_transcript) { %>
+<h4>Transcript</h4>
+<pre style="background:var(--pico-card-background-color);border:1px solid var(--pico-muted-border-color);border-radius:6px;padding:1rem;max-height:400px;overflow-y:auto;white-space:pre-wrap;font-size:0.85rem;"><%= call.raw_transcript %></pre>
+<% } %>
+
+<script>
+async function flagCall(id) {
+  const note = document.getElementById('flag-note').value;
+  await fetch(`/admin/calls/${id}/flag`, {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({note})});
+  window.location.reload();
+}
+async function sendFollowUp(id) {
+  const btn = event.target;
+  btn.disabled = true; btn.textContent = 'Sending…';
+  const resp = await fetch(`/admin/calls/${id}/manual-follow-up`, {method:'POST'});
+  btn.textContent = resp.ok ? 'Sent!' : 'Failed';
+}
+</script>

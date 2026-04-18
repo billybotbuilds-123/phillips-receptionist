@@ -1,0 +1,42 @@
+<mj-head>
+  <mj-title>URGENT — {{reason_label}}</mj-title>
+  <mj-preview>{{parent_name}} · {{summary_first_sentence}}</mj-preview>
+  <mj-attributes>
+    <mj-all font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" />
+    <mj-text line-height="1.55" font-size="16px" color="#2b2b2b" />
+  </mj-attributes>
+</mj-head>
+<mj-body background-color="#fdf4f2">
+  <mj-section background-color="#c84a2e" padding="20px 24px" border-radius="12px 12px 0 0">
+    <mj-column>
+      <mj-text color="#ffffff" font-size="18px" font-weight="500">⚠ Urgent — {{reason_label}}</mj-text>
+    </mj-column>
+  </mj-section>
+
+  <mj-section background-color="#ffffff" padding="24px">
+    <mj-column>
+      <mj-text font-size="15px" color="#6b6b68" padding-bottom="0">Parent</mj-text>
+      <mj-text font-size="17px" font-weight="500" padding-top="0">{{parent_name}}</mj-text>
+
+      <mj-text font-size="15px" color="#6b6b68" padding-bottom="0">Phone</mj-text>
+      <mj-text font-size="17px" padding-top="0"><a href="tel:{{parent_phone}}" style="color:#2b5cdc;">{{parent_phone}}</a></mj-text>
+
+      <mj-text font-size="15px" color="#6b6b68" padding-bottom="0">Email</mj-text>
+      <mj-text font-size="17px" padding-top="0"><a href="mailto:{{parent_email}}" style="color:#2b5cdc;">{{parent_email}}</a></mj-text>
+
+      <mj-divider border-color="#ece8df" border-width="1px" padding="16px 0" />
+
+      <mj-text font-size="15px" color="#6b6b68" padding-bottom="0">Summary</mj-text>
+      <mj-text padding-top="4px">{{summary}}</mj-text>
+    </mj-column>
+  </mj-section>
+
+  <mj-section background-color="#ffffff" padding="0 24px 24px" border-radius="0 0 12px 12px">
+    <mj-column>
+      <mj-button background-color="#2b5cdc" color="#ffffff" border-radius="8px" font-size="16px" font-weight="500" padding="14px 24px" href="{{call_dashboard_url}}" align="left">Open full call details</mj-button>
+      <mj-text font-size="13px" color="#8a8a85" padding-top="12px">
+        Received at {{call_time_pt}} · {{duration_label}} · Call ID {{vapi_call_id}}
+      </mj-text>
+    </mj-column>
+  </mj-section>
+</mj-body>
