@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "worker": "tsx watch src/worker.ts",
-    "build": "tsc --noEmit && mjml src/templates/emails/*.mjml -o src/templates/emails/",
+    "build": "tsc --noEmit",
+    "build:emails": "mjml src/templates/emails/*.mjml -o src/templates/emails/",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "bootstrap": "tsx scripts/bootstrap.ts",
