@@ -1,64 +1,82 @@
-<% locals.currentPage = 'settings'; locals.title = 'Voice'; %>
-<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
-  <h2 style="margin:0;">Settings</h2>
-  <small style="color:var(--pico-muted-color);">All changes are saved encrypted.</small>
-</div>
+<% locals.currentPage = 'settings'; %>
 <% if (missingCount > 0) { %>
-<div class="top-banner">⚠️ <strong><%= missingCount %> setting<%= missingCount === 1 ? '' : 's' %> still need configuration</strong></div>
+<div class="alert warning" style="margin-bottom:1.25rem;">
+  <span class="alert-icon">⚠️</span>
+  <strong><%= missingCount %> setting<%= missingCount === 1 ? '' : 's' %> need configuration.</strong>
+  Required fields are marked below.
+</div>
 <% } %>
-<div class="settings-layout">
-  <div class="settings-sidebar"><%- include('./_nav') %></div>
-  <div class="settings-content">
+<div class="page-header">
+  <h1 style="font-size:1.375rem;">Settings</h1>
+  <p class="text-muted text-sm">Encrypted at rest (AES-256-GCM). Changes take effect immediately.</p>
+</div>
+<div class="settings-shell">
+  <%- include('./_sidenav') %>
+  <div class="settings-body">
+<% locals.title = 'Voice'; %>
 
-    <h3 style="margin-top:0;">Voice (ElevenLabs)</h3>
-    <p style="color:var(--pico-muted-color);font-size:0.9rem;">Changing the voice ID takes effect on the next call — no redeploy needed.</p>
+<div class="card">
+  <div class="card-header">
+    <span class="card-title">🎙 Voice (ElevenLabs)</span>
+  </div>
+  <div class="card-body">
+    <p class="text-muted text-sm" style="margin-bottom:1.5rem;">Riley currently uses Vapi's built-in <strong>Savannah</strong> voice. Enter an ElevenLabs API key and voice ID to upgrade to a custom voice. Changes take effect on the next call — no redeploy needed.</p>
 
-    <div class="field-row">
-      <label>ElevenLabs API key
-        <% if (missingSettings.includes('elevenlabs_api_key')) { %><span class="missing-badge">required</span><% } %>
-      </label>
-      <div class="field-actions">
-        <input type="text" data-key="elevenlabs_api_key" value="<%= tabData['elevenlabs_api_key'] || '' %>" class="reveal-field" style="flex:1;font-family:monospace;" />
-        <button type="button" data-reveal-key="elevenlabs_api_key" class="secondary outline">Reveal</button>
-        <button type="button" data-save-key="elevenlabs_api_key">Save</button>
+    <div class="form-section">
+      <div class="form-section-title">ElevenLabs credentials</div>
+
+      <div class="field">
+        <label>
+          API key
+          <% if (missingSettings.includes('elevenlabs_api_key')) { %><span class="required-badge">required</span><% } else { %><span class="optional-badge">optional</span><% } %>
+        </label>
+        <div class="field-row">
+          <input type="text" data-key="elevenlabs_api_key" value="<%= tabData['elevenlabs_api_key'] || '' %>" class="mono" placeholder="sk_…" />
+          <button type="button" class="btn btn-secondary btn-sm" data-reveal-key="elevenlabs_api_key" style="white-space:nowrap;">Reveal</button>
+          <button type="button" class="btn btn-primary btn-sm" data-save-key="elevenlabs_api_key" style="white-space:nowrap;">Save</button>
+        </div>
+        <div class="field-hint">Needs <code>voices_read</code> scope. Regenerate at elevenlabs.io if missing.</div>
+        <div data-feedback="elevenlabs_api_key" class="field-feedback"></div>
       </div>
-      <div data-feedback="elevenlabs_api_key" class="field-feedback"></div>
+
+      <div class="field">
+        <label>
+          Voice ID
+          <% if (missingSettings.includes('elevenlabs_voice_id')) { %><span class="required-badge">required</span><% } else { %><span class="optional-badge">optional</span><% } %>
+        </label>
+        <div class="field-row">
+          <input type="text" data-key="elevenlabs_voice_id" value="<%= tabData['elevenlabs_voice_id'] || '' %>" class="mono" placeholder="20-char alphanumeric from ElevenLabs" />
+          <button type="button" class="btn btn-primary btn-sm" data-save-key="elevenlabs_voice_id" style="white-space:nowrap;">Save</button>
+        </div>
+        <div class="field-hint">Find this in your ElevenLabs dashboard under Voices → Voice ID.</div>
+        <div data-feedback="elevenlabs_voice_id" class="field-feedback"></div>
+      </div>
     </div>
 
-    <div class="field-row">
-      <label>Voice ID
-        <% if (missingSettings.includes('elevenlabs_voice_id')) { %><span class="missing-badge">required</span><% } %>
-      </label>
-      <div class="field-actions">
-        <input type="text" data-key="elevenlabs_voice_id" value="<%= tabData['elevenlabs_voice_id'] || '' %>" placeholder="20-char alphanumeric" style="flex:1;font-family:monospace;" />
-        <button type="button" data-save-key="elevenlabs_voice_id">Save</button>
-      </div>
-      <div data-feedback="elevenlabs_voice_id" class="field-feedback"></div>
-    </div>
-
-    <div style="display:flex;gap:0.75rem;flex-wrap:wrap;margin-top:1.5rem;align-items:center;">
-      <button type="button" data-test-service="elevenlabs">Test ElevenLabs</button>
-      <button type="button" id="preview-voice-btn" class="secondary">Preview voice</button>
-      <span data-test-result="elevenlabs" style="font-size:0.85rem;"></span>
+    <div class="action-bar">
+      <button type="button" class="btn btn-secondary" data-test-service="elevenlabs">Test ElevenLabs</button>
+      <button type="button" class="btn btn-secondary" id="preview-voice-btn">▶ Preview voice</button>
+      <span data-test-result="elevenlabs"></span>
     </div>
     <div id="preview-audio-container" style="margin-top:1rem;"></div>
-
   </div>
 </div>
+
 <script>
 document.getElementById('preview-voice-btn')?.addEventListener('click', async () => {
   const btn = document.getElementById('preview-voice-btn');
-  if (!btn) return;
   btn.disabled = true; btn.textContent = 'Generating…';
   const resp = await fetch('/admin/elevenlabs/preview', {method:'POST'});
   const container = document.getElementById('preview-audio-container');
   if (resp.ok) {
     const blob = await resp.blob();
     const url = URL.createObjectURL(blob);
-    if (container) container.innerHTML = '<audio controls autoplay src="' + url + '"></audio>';
+    if (container) container.innerHTML = '<audio controls autoplay src="' + url + '" style="width:100%;margin-top:0.5rem;"></audio>';
   } else {
-    if (container) container.textContent = 'Preview failed.';
+    if (container) { container.textContent = '✗ Preview failed — check ElevenLabs key and voice ID.'; container.style.color='var(--danger)'; }
   }
-  btn.disabled = false; btn.textContent = 'Preview voice';
+  btn.disabled = false; btn.textContent = '▶ Preview voice';
 });
 </script>
+  </div>
+</div>

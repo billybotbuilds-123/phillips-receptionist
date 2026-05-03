@@ -1,79 +1,105 @@
-<% locals.currentPage = 'settings'; locals.title = 'Google'; %>
-<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
-  <h2 style="margin:0;">Settings</h2>
-  <small style="color:var(--pico-muted-color);">All changes are saved encrypted.</small>
-</div>
+<% locals.currentPage = 'settings'; %>
 <% if (missingCount > 0) { %>
-<div class="top-banner">⚠️ <strong><%= missingCount %> setting<%= missingCount === 1 ? '' : 's' %> still need configuration</strong></div>
+<div class="alert warning" style="margin-bottom:1.25rem;">
+  <span class="alert-icon">⚠️</span>
+  <strong><%= missingCount %> setting<%= missingCount === 1 ? '' : 's' %> need configuration.</strong>
+  Required fields are marked below.
+</div>
 <% } %>
-<div class="settings-layout">
-  <div class="settings-sidebar"><%- include('./_nav') %></div>
-  <div class="settings-content">
+<div class="page-header">
+  <h1 style="font-size:1.375rem;">Settings</h1>
+  <p class="text-muted text-sm">Encrypted at rest (AES-256-GCM). Changes take effect immediately.</p>
+</div>
+<div class="settings-shell">
+  <%- include('./_sidenav') %>
+  <div class="settings-body">
+<% locals.title = 'Google / Email'; %>
 
-    <h3 style="margin-top:0;">Google</h3>
-    <p style="color:var(--pico-muted-color);font-size:0.9rem;">Riley creates one Google Doc per call and sends booking emails via Gmail. Run <code>npm run bootstrap:google</code> to obtain a refresh token.</p>
+<div class="card">
+  <div class="card-header">
+    <span class="card-title">📧 Google / Email</span>
+  </div>
+  <div class="card-body">
+    <p class="text-muted text-sm" style="margin-bottom:1.5rem;">Riley creates one Google Doc per call and sends booking confirmation emails via Gmail. Run <code style="background:var(--bg);padding:1px 5px;border-radius:4px;font-size:12px;">npm run bootstrap:google</code> to obtain a refresh token if you haven't already.</p>
 
-    <div class="field-row">
-      <label>OAuth Client ID
-        <% if (missingSettings.includes('google_oauth_client_id')) { %><span class="missing-badge">required</span><% } %>
-      </label>
-      <div class="field-actions">
-        <input type="text" data-key="google_oauth_client_id" value="<%= tabData['google_oauth_client_id'] || '' %>" style="flex:1;" />
-        <button type="button" data-save-key="google_oauth_client_id">Save</button>
+    <div class="form-section">
+      <div class="form-section-title">OAuth credentials</div>
+
+      <div class="field">
+        <label>
+          Client ID
+          <% if (missingSettings.includes('google_oauth_client_id')) { %><span class="required-badge">required</span><% } %>
+        </label>
+        <div class="field-row">
+          <input type="text" data-key="google_oauth_client_id" value="<%= tabData['google_oauth_client_id'] || '' %>" class="mono" placeholder="xxxxx.apps.googleusercontent.com" />
+          <button type="button" class="btn btn-secondary btn-sm" data-reveal-key="google_oauth_client_id" style="white-space:nowrap;">Reveal</button>
+          <button type="button" class="btn btn-primary btn-sm" data-save-key="google_oauth_client_id" style="white-space:nowrap;">Save</button>
+        </div>
+        <div data-feedback="google_oauth_client_id" class="field-feedback"></div>
       </div>
-      <div data-feedback="google_oauth_client_id" class="field-feedback"></div>
-    </div>
 
-    <div class="field-row">
-      <label>OAuth Client Secret
-        <% if (missingSettings.includes('google_oauth_client_secret')) { %><span class="missing-badge">required</span><% } %>
-      </label>
-      <div class="field-actions">
-        <input type="text" data-key="google_oauth_client_secret" value="<%= tabData['google_oauth_client_secret'] || '' %>" class="reveal-field" style="flex:1;font-family:monospace;" />
-        <button type="button" data-reveal-key="google_oauth_client_secret" class="secondary outline">Reveal</button>
-        <button type="button" data-save-key="google_oauth_client_secret">Save</button>
+      <div class="field">
+        <label>
+          Client secret
+          <% if (missingSettings.includes('google_oauth_client_secret')) { %><span class="required-badge">required</span><% } %>
+        </label>
+        <div class="field-row">
+          <input type="text" data-key="google_oauth_client_secret" value="<%= tabData['google_oauth_client_secret'] || '' %>" class="mono" />
+          <button type="button" class="btn btn-secondary btn-sm" data-reveal-key="google_oauth_client_secret" style="white-space:nowrap;">Reveal</button>
+          <button type="button" class="btn btn-primary btn-sm" data-save-key="google_oauth_client_secret" style="white-space:nowrap;">Save</button>
+        </div>
+        <div data-feedback="google_oauth_client_secret" class="field-feedback"></div>
       </div>
-      <div data-feedback="google_oauth_client_secret" class="field-feedback"></div>
-    </div>
 
-    <div class="field-row">
-      <label>Refresh Token
-        <% if (missingSettings.includes('google_oauth_refresh_token')) { %><span class="missing-badge">required</span><% } %>
-      </label>
-      <div class="field-actions">
-        <input type="text" data-key="google_oauth_refresh_token" value="<%= tabData['google_oauth_refresh_token'] || '' %>" class="reveal-field" style="flex:1;font-family:monospace;" />
-        <button type="button" data-reveal-key="google_oauth_refresh_token" class="secondary outline">Reveal</button>
-        <button type="button" data-save-key="google_oauth_refresh_token">Save</button>
+      <div class="field">
+        <label>
+          Refresh token
+          <% if (missingSettings.includes('google_oauth_refresh_token')) { %><span class="required-badge">required</span><% } %>
+        </label>
+        <div class="field-row">
+          <input type="text" data-key="google_oauth_refresh_token" value="<%= tabData['google_oauth_refresh_token'] || '' %>" class="mono" />
+          <button type="button" class="btn btn-secondary btn-sm" data-reveal-key="google_oauth_refresh_token" style="white-space:nowrap;">Reveal</button>
+          <button type="button" class="btn btn-primary btn-sm" data-save-key="google_oauth_refresh_token" style="white-space:nowrap;">Save</button>
+        </div>
+        <div data-feedback="google_oauth_refresh_token" class="field-feedback"></div>
       </div>
-      <div data-feedback="google_oauth_refresh_token" class="field-feedback"></div>
     </div>
 
-    <div class="field-row">
-      <label>Sender email
-        <% if (missingSettings.includes('google_sender_email')) { %><span class="missing-badge">required</span><% } %>
-      </label>
-      <div class="field-actions">
-        <input type="email" data-key="google_sender_email" value="<%= tabData['google_sender_email'] || '' %>" style="flex:1;" />
-        <button type="button" data-save-key="google_sender_email">Save</button>
+    <div class="form-section">
+      <div class="form-section-title">Email & Drive</div>
+
+      <div class="field">
+        <label>
+          Sender email address
+          <% if (missingSettings.includes('google_sender_email')) { %><span class="required-badge">required</span><% } %>
+        </label>
+        <div class="field-row">
+          <input type="email" data-key="google_sender_email" value="<%= tabData['google_sender_email'] || '' %>" placeholder="EducationalSuccessExpert@gmail.com" />
+          <button type="button" class="btn btn-primary btn-sm" data-save-key="google_sender_email" style="white-space:nowrap;">Save</button>
+        </div>
+        <div class="field-hint">Emails to parents will be sent from this address via Gmail API.</div>
+        <div data-feedback="google_sender_email" class="field-feedback"></div>
       </div>
-      <div data-feedback="google_sender_email" class="field-feedback"></div>
-    </div>
 
-    <div class="field-row">
-      <label>Drive folder ID for call notes
-        <% if (missingSettings.includes('google_drive_notes_folder_id')) { %><span class="missing-badge">required</span><% } %>
-      </label>
-      <div class="field-actions">
-        <input type="text" data-key="google_drive_notes_folder_id" value="<%= tabData['google_drive_notes_folder_id'] || '' %>" style="flex:1;font-family:monospace;" />
-        <button type="button" data-save-key="google_drive_notes_folder_id">Save</button>
+      <div class="field">
+        <label>
+          Drive folder ID (call notes)
+          <% if (missingSettings.includes('google_drive_notes_folder_id')) { %><span class="required-badge">required</span><% } %>
+        </label>
+        <div class="field-row">
+          <input type="text" data-key="google_drive_notes_folder_id" value="<%= tabData['google_drive_notes_folder_id'] || '' %>" class="mono" placeholder="1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgVE2upms" />
+          <button type="button" class="btn btn-primary btn-sm" data-save-key="google_drive_notes_folder_id" style="white-space:nowrap;">Save</button>
+        </div>
+        <div class="field-hint">Get this from the URL when you open the folder in Google Drive.</div>
+        <div data-feedback="google_drive_notes_folder_id" class="field-feedback"></div>
       </div>
-      <div data-feedback="google_drive_notes_folder_id" class="field-feedback"></div>
     </div>
 
-    <div style="display:flex;gap:0.75rem;flex-wrap:wrap;margin-top:1.5rem;align-items:center;">
-      <button type="button" data-test-service="google">Test Google OAuth</button>
-      <span data-test-result="google" style="font-size:0.85rem;"></span>
+    <div class="action-bar">
+      <button type="button" class="btn btn-secondary" data-test-service="google">Test Google OAuth</button>
+      <span data-test-result="google"></span>
     </div>
-
+  </div>
+</div>
   </div>
 </div>

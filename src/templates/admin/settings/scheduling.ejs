@@ -1,57 +1,81 @@
-<% locals.currentPage = 'settings'; locals.title = 'Scheduling'; %>
-<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
-  <h2 style="margin:0;">Settings</h2>
-  <small style="color:var(--pico-muted-color);">All changes are saved encrypted.</small>
-</div>
+<% locals.currentPage = 'settings'; %>
 <% if (missingCount > 0) { %>
-<div class="top-banner">⚠️ <strong><%= missingCount %> setting<%= missingCount === 1 ? '' : 's' %> still need configuration</strong></div>
+<div class="alert warning" style="margin-bottom:1.25rem;">
+  <span class="alert-icon">⚠️</span>
+  <strong><%= missingCount %> setting<%= missingCount === 1 ? '' : 's' %> need configuration.</strong>
+  Required fields are marked below.
+</div>
 <% } %>
-<div class="settings-layout">
-  <div class="settings-sidebar"><%- include('./_nav') %></div>
-  <div class="settings-content">
+<div class="page-header">
+  <h1 style="font-size:1.375rem;">Settings</h1>
+  <p class="text-muted text-sm">Encrypted at rest (AES-256-GCM). Changes take effect immediately.</p>
+</div>
+<div class="settings-shell">
+  <%- include('./_sidenav') %>
+  <div class="settings-body">
+<% locals.title = 'Scheduling'; %>
 
-    <h3 style="margin-top:0;">Scheduling (Calendly)</h3>
-    <p style="color:var(--pico-muted-color);font-size:0.9rem;">The $30 consultation fee is collected by Calendly's native Stripe integration at booking time.</p>
+<div class="card">
+  <div class="card-header">
+    <span class="card-title">📅 Scheduling (Calendly)</span>
+  </div>
+  <div class="card-body">
+    <p class="text-muted text-sm" style="margin-bottom:1.5rem;">Riley texts a personalized Calendly booking link after every call. The <strong>$30 consultation fee</strong> is collected by Calendly's built-in Stripe integration at booking time — Riley never handles payments directly.</p>
 
-    <div class="field-row">
-      <label>Calendly API token
-        <% if (missingSettings.includes('calendly_api_token')) { %><span class="missing-badge">required</span><% } %>
-      </label>
-      <div class="field-actions">
-        <input type="text" data-key="calendly_api_token" value="<%= tabData['calendly_api_token'] || '' %>" class="reveal-field" style="flex:1;font-family:monospace;" />
-        <button type="button" data-reveal-key="calendly_api_token" class="secondary outline">Reveal</button>
-        <button type="button" data-save-key="calendly_api_token">Save</button>
+    <div class="form-section">
+      <div class="form-section-title">Calendly API</div>
+
+      <div class="field">
+        <label>
+          Personal API token
+          <% if (missingSettings.includes('calendly_api_token')) { %><span class="required-badge">required</span><% } %>
+        </label>
+        <div class="field-row">
+          <input type="text" data-key="calendly_api_token" value="<%= tabData['calendly_api_token'] || '' %>" class="mono" placeholder="eyJraWQiOiIx…" />
+          <button type="button" class="btn btn-secondary btn-sm" data-reveal-key="calendly_api_token" style="white-space:nowrap;">Reveal</button>
+          <button type="button" class="btn btn-primary btn-sm" data-save-key="calendly_api_token" style="white-space:nowrap;">Save</button>
+        </div>
+        <div class="field-hint">Found in Calendly → Integrations → API & Webhooks.</div>
+        <div data-feedback="calendly_api_token" class="field-feedback"></div>
       </div>
-      <div data-feedback="calendly_api_token" class="field-feedback"></div>
-    </div>
 
-    <div class="field-row">
-      <label>Webhook signing key
-        <% if (missingSettings.includes('calendly_webhook_signing_key')) { %><span class="missing-badge">required</span><% } %>
-      </label>
-      <div class="field-actions">
-        <input type="text" data-key="calendly_webhook_signing_key" value="<%= tabData['calendly_webhook_signing_key'] || '' %>" class="reveal-field" style="flex:1;font-family:monospace;" />
-        <button type="button" data-reveal-key="calendly_webhook_signing_key" class="secondary outline">Reveal</button>
-        <button type="button" data-save-key="calendly_webhook_signing_key">Save</button>
+      <div class="field">
+        <label>
+          Webhook signing key
+          <% if (missingSettings.includes('calendly_webhook_signing_key')) { %><span class="required-badge">required</span><% } %>
+        </label>
+        <div class="field-row">
+          <input type="text" data-key="calendly_webhook_signing_key" value="<%= tabData['calendly_webhook_signing_key'] || '' %>" class="mono" />
+          <button type="button" class="btn btn-secondary btn-sm" data-reveal-key="calendly_webhook_signing_key" style="white-space:nowrap;">Reveal</button>
+          <button type="button" class="btn btn-primary btn-sm" data-save-key="calendly_webhook_signing_key" style="white-space:nowrap;">Save</button>
+        </div>
+        <div class="field-hint">Used to verify Calendly webhook payloads. Set once; rotate if compromised.</div>
+        <div data-feedback="calendly_webhook_signing_key" class="field-feedback"></div>
       </div>
-      <div data-feedback="calendly_webhook_signing_key" class="field-feedback"></div>
     </div>
 
-    <div class="field-row">
-      <label>Event type URI
-        <% if (missingSettings.includes('calendly_event_type_uri')) { %><span class="missing-badge">required</span><% } %>
-      </label>
-      <div class="field-actions">
-        <input type="text" data-key="calendly_event_type_uri" value="<%= tabData['calendly_event_type_uri'] || '' %>" placeholder="https://calendly.com/..." style="flex:1;" />
-        <button type="button" data-save-key="calendly_event_type_uri">Save</button>
+    <div class="form-section">
+      <div class="form-section-title">Event type</div>
+
+      <div class="field">
+        <label>
+          Event type URI
+          <% if (missingSettings.includes('calendly_event_type_uri')) { %><span class="required-badge">required</span><% } %>
+        </label>
+        <div class="field-row">
+          <input type="text" data-key="calendly_event_type_uri" value="<%= tabData['calendly_event_type_uri'] || '' %>" placeholder="https://api.calendly.com/event_types/xxxxx" />
+          <button type="button" class="btn btn-primary btn-sm" data-save-key="calendly_event_type_uri" style="white-space:nowrap;">Save</button>
+        </div>
+        <div class="field-hint">Paste the URI from your Calendly "15-min consultation" event type details.</div>
+        <div data-feedback="calendly_event_type_uri" class="field-feedback"></div>
       </div>
-      <div data-feedback="calendly_event_type_uri" class="field-feedback"></div>
     </div>
 
-    <div style="display:flex;gap:0.75rem;flex-wrap:wrap;margin-top:1.5rem;align-items:center;">
-      <button type="button" data-test-service="calendly">Test Calendly</button>
-      <span data-test-result="calendly" style="font-size:0.85rem;"></span>
+    <div class="action-bar">
+      <button type="button" class="btn btn-secondary" data-test-service="calendly">Test Calendly</button>
+      <span data-test-result="calendly"></span>
     </div>
-
+  </div>
+</div>
   </div>
 </div>

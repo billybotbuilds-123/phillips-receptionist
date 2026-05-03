@@ -1,71 +1,101 @@
-<% locals.currentPage = 'settings'; locals.title = 'Core AI'; %>
-<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
-  <h2 style="margin:0;">Settings</h2>
-  <small style="color:var(--pico-muted-color);">All changes are saved encrypted.</small>
-</div>
+<% locals.currentPage = 'settings'; %>
 <% if (missingCount > 0) { %>
-<div class="top-banner">⚠️ <strong><%= missingCount %> setting<%= missingCount === 1 ? '' : 's' %> still need configuration</strong></div>
+<div class="alert warning" style="margin-bottom:1.25rem;">
+  <span class="alert-icon">⚠️</span>
+  <strong><%= missingCount %> setting<%= missingCount === 1 ? '' : 's' %> need configuration.</strong>
+  Required fields are marked below.
+</div>
 <% } %>
-<div class="settings-layout">
-  <div class="settings-sidebar"><%- include('./_nav') %></div>
-  <div class="settings-content">
+<div class="page-header">
+  <h1 style="font-size:1.375rem;">Settings</h1>
+  <p class="text-muted text-sm">Encrypted at rest (AES-256-GCM). Changes take effect immediately.</p>
+</div>
+<div class="settings-shell">
+  <%- include('./_sidenav') %>
+  <div class="settings-body">
+<% locals.title = 'Core AI'; %>
 
-    <h3 style="margin-top:0;">Core AI</h3>
-    <p style="color:var(--pico-muted-color);font-size:0.9rem;">API keys for the AI stack. The Anthropic key pays for Riley's conversation. Vapi pays for the phone-to-Claude bridge.</p>
+<div class="card">
+  <div class="card-header">
+    <span class="card-title">🤖 Core AI</span>
+  </div>
+  <div class="card-body">
+    <p class="text-muted text-sm" style="margin-bottom:1.5rem;">The Anthropic key pays for Riley's brain. Vapi connects the phone call to Claude. Both are required.</p>
 
-    <div class="field-row">
-      <label>Anthropic API key
-        <% if (missingSettings.includes('anthropic_api_key')) { %><span class="missing-badge">required</span><% } %>
-      </label>
-      <div class="field-actions">
-        <input type="text" data-key="anthropic_api_key" value="<%= tabData['anthropic_api_key'] || '' %>" class="reveal-field" style="flex:1;font-family:monospace;" />
-        <button type="button" data-reveal-key="anthropic_api_key" class="secondary outline" style="white-space:nowrap;">Reveal</button>
-        <button type="button" data-save-key="anthropic_api_key">Save</button>
+    <div class="form-section">
+      <div class="form-section-title">Anthropic</div>
+
+      <div class="field">
+        <label>
+          Anthropic API key
+          <% if (missingSettings.includes('anthropic_api_key')) { %><span class="required-badge">required</span><% } %>
+        </label>
+        <div class="field-row">
+          <input type="text" data-key="anthropic_api_key" value="<%= tabData['anthropic_api_key'] || '' %>" class="mono" placeholder="sk-ant-api03-…" />
+          <button type="button" class="btn btn-secondary btn-sm" data-reveal-key="anthropic_api_key" style="white-space:nowrap;">Reveal</button>
+          <button type="button" class="btn btn-primary btn-sm" data-save-key="anthropic_api_key" style="white-space:nowrap;">Save</button>
+        </div>
+        <div data-feedback="anthropic_api_key" class="field-feedback"></div>
       </div>
-      <div data-feedback="anthropic_api_key" class="field-feedback"></div>
     </div>
 
-    <div class="field-row">
-      <label>Vapi API key
-        <% if (missingSettings.includes('vapi_api_key')) { %><span class="missing-badge">required</span><% } %>
-      </label>
-      <div class="field-actions">
-        <input type="text" data-key="vapi_api_key" value="<%= tabData['vapi_api_key'] || '' %>" class="reveal-field" style="flex:1;font-family:monospace;" />
-        <button type="button" data-reveal-key="vapi_api_key" class="secondary outline" style="white-space:nowrap;">Reveal</button>
-        <button type="button" data-save-key="vapi_api_key">Save</button>
+    <div class="form-section">
+      <div class="form-section-title">Vapi</div>
+
+      <div class="field">
+        <label>
+          Vapi API key
+          <% if (missingSettings.includes('vapi_api_key')) { %><span class="required-badge">required</span><% } %>
+        </label>
+        <div class="field-row">
+          <input type="text" data-key="vapi_api_key" value="<%= tabData['vapi_api_key'] || '' %>" class="mono" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" />
+          <button type="button" class="btn btn-secondary btn-sm" data-reveal-key="vapi_api_key" style="white-space:nowrap;">Reveal</button>
+          <button type="button" class="btn btn-primary btn-sm" data-save-key="vapi_api_key" style="white-space:nowrap;">Save</button>
+        </div>
+        <div data-feedback="vapi_api_key" class="field-feedback"></div>
       </div>
-      <div data-feedback="vapi_api_key" class="field-feedback"></div>
-    </div>
 
-    <div class="field-row">
-      <label>Vapi webhook secret
-        <% if (missingSettings.includes('vapi_webhook_secret')) { %><span class="missing-badge">required</span><% } %>
-      </label>
-      <div class="field-actions">
-        <input type="text" data-key="vapi_webhook_secret" value="<%= tabData['vapi_webhook_secret'] || '' %>" class="reveal-field" style="flex:1;font-family:monospace;" />
-        <button type="button" data-reveal-key="vapi_webhook_secret" class="secondary outline" style="white-space:nowrap;">Reveal</button>
-        <button type="button" data-save-key="vapi_webhook_secret">Save</button>
+      <div class="field">
+        <label>
+          Vapi webhook secret
+          <% if (missingSettings.includes('vapi_webhook_secret')) { %><span class="required-badge">required</span><% } %>
+        </label>
+        <div class="field-row">
+          <input type="text" data-key="vapi_webhook_secret" value="<%= tabData['vapi_webhook_secret'] || '' %>" class="mono" />
+          <button type="button" class="btn btn-secondary btn-sm" data-reveal-key="vapi_webhook_secret" style="white-space:nowrap;">Reveal</button>
+          <button type="button" class="btn btn-primary btn-sm" data-save-key="vapi_webhook_secret" style="white-space:nowrap;">Save</button>
+        </div>
+        <div class="field-hint">Used to verify inbound webhooks from Vapi. Rotate if compromised.</div>
+        <div data-feedback="vapi_webhook_secret" class="field-feedback"></div>
       </div>
-      <div data-feedback="vapi_webhook_secret" class="field-feedback"></div>
     </div>
 
-    <div style="display:flex;gap:0.75rem;flex-wrap:wrap;margin-top:1.5rem;align-items:center;">
-      <button type="button" data-test-service="anthropic">Test Anthropic</button>
-      <button type="button" data-test-service="vapi">Test Vapi</button>
-      <button type="button" id="rotate-secret-btn" class="secondary">Rotate webhook secret</button>
-      <span data-test-result="anthropic" style="font-size:0.85rem;"></span>
-      <span data-test-result="vapi" style="font-size:0.85rem;"></span>
+    <div class="action-bar">
+      <button type="button" class="btn btn-secondary" data-test-service="anthropic">Test Anthropic</button>
+      <button type="button" class="btn btn-secondary" data-test-service="vapi">Test Vapi</button>
+      <button type="button" class="btn btn-secondary" id="rotate-secret-btn">Rotate webhook secret</button>
+      <span data-test-result="anthropic"></span>
+      <span data-test-result="vapi"></span>
     </div>
-    <div id="rotate-result" style="margin-top:0.5rem;font-family:monospace;font-size:0.85rem;"></div>
-
+    <div id="rotate-result" style="margin-top:0.75rem;font-family:monospace;font-size:12.5px;color:var(--text2);"></div>
   </div>
 </div>
+
 <script>
 document.getElementById('rotate-secret-btn')?.addEventListener('click', async () => {
+  const btn = document.getElementById('rotate-secret-btn');
+  btn.disabled = true; btn.textContent = 'Rotating…';
   const resp = await fetch('/admin/settings/vapi/rotate-secret', {method:'POST'});
   const data = await resp.json();
-  document.getElementById('rotate-result').textContent = resp.ok
-    ? 'New secret: ' + data.new_secret + '  (Update in Vapi dashboard — shown once)'
-    : 'Failed';
+  const el = document.getElementById('rotate-result');
+  if (resp.ok) {
+    el.textContent = '✓ New secret: ' + data.new_secret + '  — update this in Vapi dashboard (shown once only)';
+    el.style.color = 'var(--success)';
+  } else {
+    el.textContent = '✗ Rotate failed'; el.style.color = 'var(--danger)';
+  }
+  btn.disabled = false; btn.textContent = 'Rotate webhook secret';
 });
 </script>
+  </div>
+</div>

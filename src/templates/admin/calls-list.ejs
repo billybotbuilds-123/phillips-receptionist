@@ -1,46 +1,84 @@
 <% locals.title = 'Calls'; locals.currentPage = 'calls'; %>
-<h2 style="margin-top:0;">All calls</h2>
 
-<div style="overflow-x:auto;">
-<table>
-  <thead>
-    <tr>
-      <th>Time</th>
-      <th>Parent</th>
-      <th>Grade</th>
-      <th>Urgency</th>
-      <th>Duration</th>
-      <th>Status</th>
-    </tr>
-  </thead>
-  <tbody>
-  <% for (const call of calls) { %>
-    <tr>
-      <td style="white-space:nowrap;font-size:0.85rem;"><%= new Date(call.started_at).toLocaleString('en-US', {timeZone:'America/Los_Angeles',month:'short',day:'numeric',year:'numeric',hour:'2-digit',minute:'2-digit'}) %></td>
-      <td><a href="/admin/calls/<%= call.id %>"><%= call.parent_name || '(unknown)' %></a>
-        <% if (call.flagged) { %> <span class="badge badge-danger" title="<%= call.flag_note || '' %>">⚑</span><% } %>
-        <% if (call.escalated) { %> <span class="badge badge-danger">escalated</span><% } %>
-      </td>
-      <td><%= call.child_grade || '—' %></td>
-      <td>
-        <% const urgencyColors = {low:'badge-info',medium:'badge-warning',high:'badge-danger',crisis:'badge-danger'}; %>
-        <% if (call.urgency_level) { %><span class="badge <%= urgencyColors[call.urgency_level] || '' %>"><%= call.urgency_level %></span><% } else { %>—<% } %>
-      </td>
-      <td><% if (call.duration_seconds) { %><%= Math.floor(call.duration_seconds/60) %>m <%= call.duration_seconds % 60 %>s<% } else { %>—<% } %></td>
-      <td>
-        <% if (call.booked_at) { %><span class="badge badge-success">booked</span>
-        <% } else { %><span class="badge badge-warning">pending</span><% } %>
-      </td>
-    </tr>
-  <% } %>
-  </tbody>
-</table>
+<div class="page-header">
+  <h1 style="font-size:1.375rem;">Calls</h1>
+  <p class="text-muted text-sm">Every call Riley has taken. Click any row to see the full transcript, contact info, and messages sent.</p>
 </div>
 
-<% if (totalPages > 1) { %>
-<nav style="display:flex;gap:0.5rem;margin-top:1rem;">
-  <% for (let p = 1; p <= totalPages; p++) { %>
-    <a href="?page=<%= p %>" style="<%= p === page ? 'font-weight:bold;' : '' %>"><%= p %></a>
+<div class="card">
+  <% if (!calls || calls.length === 0) { %>
+    <div style="padding:3rem;text-align:center;color:var(--text2);">
+      <div style="font-size:2.5rem;margin-bottom:0.75rem;">📞</div>
+      <div style="font-weight:600;margin-bottom:0.25rem;">No calls yet</div>
+      <div class="text-sm">Once Riley takes a call, it will appear here.</div>
+    </div>
+  <% } else { %>
+  <div class="table-wrap">
+  <table>
+    <thead>
+      <tr>
+        <th>Date & time</th>
+        <th>Parent</th>
+        <th>Grade</th>
+        <th>Urgency</th>
+        <th>Duration</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody>
+    <% for (const call of calls) { %>
+      <tr style="cursor:pointer;" onclick="location.href='/admin/calls/<%= call.id %>'">
+        <td class="text-sm text-muted" style="white-space:nowrap;">
+          <%= new Date(call.started_at).toLocaleString('en-US', {timeZone:'America/Los_Angeles',month:'short',day:'numeric',year:'numeric',hour:'2-digit',minute:'2-digit'}) %>
+        </td>
+        <td>
+          <span style="font-weight:500;color:var(--primary)"><%= call.parent_name || '(unknown)' %></span>
+          <% if (call.flagged) { %><span class="badge badge-danger" title="<%= call.flag_note || 'flagged' %>" style="margin-left:4px;">⚑</span><% } %>
+          <% if (call.escalated) { %><span class="badge badge-danger" style="margin-left:4px;">escalated</span><% } %>
+        </td>
+        <td class="text-muted"><%= call.child_grade || '—' %></td>
+        <td>
+          <% if (call.urgency_level === 'crisis') { %>
+            <span class="badge badge-purple">🚨 crisis</span>
+          <% } else if (call.urgency_level === 'high') { %>
+            <span class="badge badge-danger">high</span>
+          <% } else if (call.urgency_level === 'medium') { %>
+            <span class="badge badge-warning">medium</span>
+          <% } else if (call.urgency_level === 'low') { %>
+            <span class="badge badge-info">low</span>
+          <% } else { %>
+            <span class="text-muted">—</span>
+          <% } %>
+        </td>
+        <td class="text-muted">
+          <% if (call.duration_seconds) { %>
+            <%= Math.floor(call.duration_seconds / 60) %>m <%= call.duration_seconds % 60 %>s
+          <% } else { %>—<% } %>
+        </td>
+        <td>
+          <% if (call.booked_at) { %>
+            <span class="badge badge-success">✓ booked</span>
+          <% } else { %>
+            <span class="badge badge-gray">pending</span>
+          <% } %>
+        </td>
+      </tr>
+    <% } %>
+    </tbody>
+  </table>
+  </div>
+
+  <% if (totalPages > 1) { %>
+  <div style="padding:1rem 1.25rem;border-top:1px solid var(--border);">
+    <nav class="pagination">
+      <% if (page > 1) { %><a href="?page=<%= page-1 %>">‹ Prev</a><% } %>
+      <% for (let p = 1; p <= totalPages; p++) { %>
+        <% if (p === page) { %><span class="current"><%= p %></span>
+        <% } else { %><a href="?page=<%= p %>"><%= p %></a><% } %>
+      <% } %>
+      <% if (page < totalPages) { %><a href="?page=<%= page+1 %>">Next ›</a><% } %>
+    </nav>
+  </div>
   <% } %>
-</nav>
-<% } %>
+  <% } %>
+</div>

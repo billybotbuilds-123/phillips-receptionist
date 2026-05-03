@@ -1,32 +1,50 @@
-<% locals.currentPage = 'settings'; locals.title = 'Payments'; %>
-<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
-  <h2 style="margin:0;">Settings</h2>
-  <small style="color:var(--pico-muted-color);">All changes are saved encrypted.</small>
-</div>
+<% locals.currentPage = 'settings'; %>
 <% if (missingCount > 0) { %>
-<div class="top-banner">⚠️ <strong><%= missingCount %> setting<%= missingCount === 1 ? '' : 's' %> still need configuration</strong></div>
+<div class="alert warning" style="margin-bottom:1.25rem;">
+  <span class="alert-icon">⚠️</span>
+  <strong><%= missingCount %> setting<%= missingCount === 1 ? '' : 's' %> need configuration.</strong>
+  Required fields are marked below.
+</div>
 <% } %>
-<div class="settings-layout">
-  <div class="settings-sidebar"><%- include('./_nav') %></div>
-  <div class="settings-content">
+<div class="page-header">
+  <h1 style="font-size:1.375rem;">Settings</h1>
+  <p class="text-muted text-sm">Encrypted at rest (AES-256-GCM). Changes take effect immediately.</p>
+</div>
+<div class="settings-shell">
+  <%- include('./_sidenav') %>
+  <div class="settings-body">
+<% locals.title = 'Payments'; %>
 
-    <h3 style="margin-top:0;">Payments (Stripe)</h3>
-    <p style="color:var(--pico-muted-color);font-size:0.9rem;">Stripe is optional for v1. Add a key for revenue tracking. The actual payment flow runs through Calendly.</p>
+<div class="card">
+  <div class="card-header">
+    <span class="card-title">💳 Payments (Stripe)</span>
+  </div>
+  <div class="card-body">
+    <p class="text-muted text-sm" style="margin-bottom:1.5rem;">Stripe is <em>optional for v1</em> — the actual $30 payment flow runs through Calendly's native Stripe integration. Add a key here for revenue tracking and optional future direct-charge flows.</p>
 
-    <div class="field-row">
-      <label>Stripe secret key</label>
-      <div class="field-actions">
-        <input type="text" data-key="stripe_secret_key" value="<%= tabData['stripe_secret_key'] || '' %>" class="reveal-field" style="flex:1;font-family:monospace;" />
-        <button type="button" data-reveal-key="stripe_secret_key" class="secondary outline">Reveal</button>
-        <button type="button" data-save-key="stripe_secret_key">Save</button>
+    <div class="form-section">
+      <div class="form-section-title">Stripe credentials</div>
+
+      <div class="field">
+        <label>
+          Secret key
+          <span class="optional-badge">optional</span>
+        </label>
+        <div class="field-row">
+          <input type="text" data-key="stripe_secret_key" value="<%= tabData['stripe_secret_key'] || '' %>" class="mono" placeholder="sk_live_…" />
+          <button type="button" class="btn btn-secondary btn-sm" data-reveal-key="stripe_secret_key" style="white-space:nowrap;">Reveal</button>
+          <button type="button" class="btn btn-primary btn-sm" data-save-key="stripe_secret_key" style="white-space:nowrap;">Save</button>
+        </div>
+        <div class="field-hint">Use <code style="background:var(--bg);padding:1px 5px;border-radius:4px;font-size:12px;">sk_test_…</code> to test, <code style="background:var(--bg);padding:1px 5px;border-radius:4px;font-size:12px;">sk_live_…</code> for production.</div>
+        <div data-feedback="stripe_secret_key" class="field-feedback"></div>
       </div>
-      <div data-feedback="stripe_secret_key" class="field-feedback"></div>
     </div>
 
-    <div style="display:flex;gap:0.75rem;flex-wrap:wrap;margin-top:1.5rem;align-items:center;">
-      <button type="button" data-test-service="stripe">Test Stripe</button>
-      <span data-test-result="stripe" style="font-size:0.85rem;"></span>
+    <div class="action-bar">
+      <button type="button" class="btn btn-secondary" data-test-service="stripe">Test Stripe connection</button>
+      <span data-test-result="stripe"></span>
     </div>
-
+  </div>
+</div>
   </div>
 </div>

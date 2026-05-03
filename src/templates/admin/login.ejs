@@ -1,36 +1,93 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="light">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Login — Riley Admin</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css" />
+  <title>Riley Admin — Sign in</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <style>
-    body { display: flex; align-items: center; justify-content: center; min-height: 100vh; background: #f5f3ef; }
-    .login-card { width: 360px; background: #fff; border-radius: 12px; padding: 2rem; box-shadow: 0 2px 16px rgba(0,0,0,0.08); }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --primary: #2563eb; --primary-h: #1d4ed8; --danger: #dc2626;
+      --border: #e4e7ef; --text: #111827; --text2: #6b7280;
+      --font: 'Inter', system-ui, sans-serif;
+    }
+    body {
+      font-family: var(--font); font-size: 14px; color: var(--text);
+      background: linear-gradient(135deg, #eff6ff 0%, #f5f3ff 100%);
+      min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 1.5rem;
+    }
+    .card {
+      background: #fff; border-radius: 16px; box-shadow: 0 20px 60px rgba(0,0,0,.12);
+      padding: 2.5rem; width: 100%; max-width: 400px;
+    }
+    .brand { text-align: center; margin-bottom: 2rem; }
+    .logo {
+      width: 52px; height: 52px; background: var(--primary); border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      color: #fff; font-size: 24px; font-weight: 700; margin: 0 auto 1rem;
+      box-shadow: 0 8px 24px rgba(37,99,235,.3);
+    }
+    .brand h1 { font-size: 1.25rem; font-weight: 700; margin-bottom: 0.25rem; }
+    .brand p { font-size: 13px; color: var(--text2); }
+    .field { margin-bottom: 1.125rem; }
+    .field label { display: block; font-size: 13px; font-weight: 500; margin-bottom: 0.375rem; }
+    .field input {
+      width: 100%; padding: 0.625rem 0.875rem; border: 1px solid var(--border);
+      border-radius: 8px; font-size: 14px; font-family: inherit; outline: none;
+      transition: border-color .15s, box-shadow .15s;
+    }
+    .field input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37,99,235,.12); }
+    .btn-submit {
+      width: 100%; padding: 0.7rem; background: var(--primary); color: #fff;
+      border: none; border-radius: 8px; font-size: 14px; font-weight: 600;
+      font-family: inherit; cursor: pointer; margin-top: 0.5rem;
+      transition: background .12s;
+    }
+    .btn-submit:hover { background: var(--primary-h); }
+    .error-msg {
+      background: #fef2f2; border: 1px solid #fca5a5; color: #991b1b;
+      border-radius: 8px; padding: 0.625rem 0.875rem; font-size: 13px; margin-bottom: 1.25rem;
+    }
+    .footer-link { text-align: center; margin-top: 1.25rem; font-size: 12.5px; color: var(--text2); }
+    .footer-link a { color: var(--primary); text-decoration: none; font-weight: 500; }
   </style>
 </head>
 <body>
-<div class="login-card">
-  <h2 style="margin-top:0;">Riley Admin</h2>
-  <% if (typeof error !== 'undefined' && error) { %>
-    <div style="color:#842029;background:#f8d7da;border-radius:6px;padding:0.75rem;margin-bottom:1rem;font-size:0.9rem;"><%- error %></div>
+<div class="card">
+  <div class="brand">
+    <div class="logo">R</div>
+    <h1>Riley Admin</h1>
+    <p>Phillips Parent Advocate</p>
+  </div>
+
+  <% if (error) { %>
+    <div class="error-msg">
+      <%= error === 'invalid_credentials' ? 'Incorrect username or password.' :
+          error === 'rate_limited'        ? 'Too many attempts — please wait a minute.' :
+          error === 'session_expired'     ? 'Your session has expired. Please sign in again.' :
+          'Sign-in failed. Please try again.' %>
+    </div>
   <% } %>
+
   <form method="POST" action="/login">
-    <input type="hidden" name="next" value="<%= typeof next !== 'undefined' ? next : '/admin' %>" />
-    <label>
-      Username
-      <input type="text" name="username" autocomplete="username" required />
-    </label>
-    <label>
-      Password
-      <input type="password" name="password" autocomplete="current-password" required />
-    </label>
-    <button type="submit" style="width:100%;">Log in</button>
+    <input type="hidden" name="next" value="<%= next %>" />
+    <div class="field">
+      <label for="username">Username</label>
+      <input type="text" id="username" name="username" autocomplete="username" autofocus required />
+    </div>
+    <div class="field">
+      <label for="password">Password</label>
+      <input type="password" id="password" name="password" autocomplete="current-password" required />
+    </div>
+    <button type="submit" class="btn-submit">Sign in →</button>
   </form>
-  <p style="font-size:0.85rem;margin-top:1rem;text-align:center;">
+
+  <div class="footer-link">
     <a href="/forgot-password">Forgot password?</a>
-  </p>
+  </div>
 </div>
 </body>
 </html>

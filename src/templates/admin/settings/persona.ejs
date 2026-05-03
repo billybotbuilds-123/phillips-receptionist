@@ -1,74 +1,112 @@
-<% locals.currentPage = 'settings'; locals.title = "Riley's Persona"; %>
-<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
-  <h2 style="margin:0;">Settings</h2>
-  <small style="color:var(--pico-muted-color);">All changes are saved encrypted.</small>
-</div>
+<% locals.currentPage = 'settings'; %>
 <% if (missingCount > 0) { %>
-<div class="top-banner">⚠️ <strong><%= missingCount %> setting<%= missingCount === 1 ? '' : 's' %> still need configuration</strong></div>
+<div class="alert warning" style="margin-bottom:1.25rem;">
+  <span class="alert-icon">⚠️</span>
+  <strong><%= missingCount %> setting<%= missingCount === 1 ? '' : 's' %> need configuration.</strong>
+  Required fields are marked below.
+</div>
 <% } %>
-<div class="settings-layout">
-  <div class="settings-sidebar"><%- include('./_nav') %></div>
-  <div class="settings-content">
+<div class="page-header">
+  <h1 style="font-size:1.375rem;">Settings</h1>
+  <p class="text-muted text-sm">Encrypted at rest (AES-256-GCM). Changes take effect immediately.</p>
+</div>
+<div class="settings-shell">
+  <%- include('./_sidenav') %>
+  <div class="settings-body">
+<% locals.title = "Riley's Persona"; %>
 
-    <h3 style="margin-top:0;">Riley's Persona</h3>
+<div class="alert warning" style="margin-bottom:1.5rem;">
+  <span class="alert-icon">⚠️</span>
+  <strong>Changes take effect on the next call.</strong> You are editing Riley's behavior in production. Test by calling the number yourself before parents do.
+</div>
 
-    <div style="background:#fff3cd;border:1px solid #ffc107;border-radius:6px;padding:0.75rem 1rem;margin-bottom:1.5rem;">
-      ⚠️ <strong>Changes take effect on the next call.</strong> You are editing Riley's behavior in production. Test by calling yourself before a parent does.
-    </div>
+<div class="card">
+  <div class="card-header">
+    <span class="card-title">✨ Riley's Persona — System prompt</span>
+  </div>
+  <div class="card-body">
+    <p class="text-muted text-sm" style="margin-bottom:1.25rem;">Leave blank to use the committed default. Edits here override the default immediately — no redeploy needed. Use <em>Apply to Vapi</em> to push live.</p>
 
-    <div class="field-row">
-      <label>System prompt override <small style="color:var(--pico-muted-color);">(blank = use committed default)</small></label>
-      <textarea data-key="riley_system_prompt_override" rows="20" style="width:100%;font-family:monospace;font-size:0.85rem;"><%= tabData['riley_system_prompt_override'] || '' %></textarea>
-      <div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-top:0.75rem;">
-        <button type="button" id="apply-vapi-btn">Apply to Vapi</button>
-        <button type="button" data-save-key="riley_system_prompt_override" class="secondary">Save only</button>
-        <button type="button" id="revert-btn" class="secondary contrast">Revert to default</button>
-      </div>
+    <div class="field">
+      <label>System prompt override <span class="optional-badge">optional</span></label>
+      <textarea data-key="riley_system_prompt_override" rows="22" style="font-family:'SFMono-Regular','Consolas',monospace;font-size:12.5px;"><%= tabData['riley_system_prompt_override'] || '' %></textarea>
       <div data-feedback="riley_system_prompt_override" class="field-feedback"></div>
-      <div id="vapi-apply-result" style="margin-top:0.5rem;font-size:0.85rem;"></div>
+      <div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-top:0.75rem;">
+        <button type="button" class="btn btn-primary" id="apply-vapi-btn">Apply to Vapi</button>
+        <button type="button" class="btn btn-secondary" data-save-key="riley_system_prompt_override">Save draft only</button>
+        <button type="button" class="btn btn-secondary" id="revert-btn" style="margin-left:auto;color:var(--danger);border-color:var(--danger);">Revert to default</button>
+      </div>
+      <div id="vapi-apply-result" style="margin-top:0.625rem;font-size:13px;min-height:16px;"></div>
     </div>
-
-    <% if (typeof versions !== 'undefined' && versions.length > 0) { %>
-    <h4>Version history <small style="color:var(--pico-muted-color);">(last 10)</small></h4>
-    <table>
-      <thead><tr><th>Saved</th><th>By</th><th>Preview</th><th></th></tr></thead>
-      <tbody>
-      <% for (const v of versions) { %>
-        <tr>
-          <td style="font-size:0.85rem;white-space:nowrap;"><%= new Date(v.created_at).toLocaleString('en-US', {timeZone:'America/Los_Angeles'}) %></td>
-          <td style="font-size:0.85rem;"><%= v.changed_by %></td>
-          <td style="font-size:0.85rem;max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-family:monospace;"><%= v.content.slice(0,80) %>…</td>
-          <td><button type="button" onclick="restoreVersion('<%= v.id %>')" class="secondary outline" style="padding:0.25rem 0.5rem;font-size:0.8rem;">Restore</button></td>
-        </tr>
-      <% } %>
-      </tbody>
-    </table>
-    <% } %>
-
   </div>
 </div>
+
+<% if (typeof versions !== 'undefined' && versions.length > 0) { %>
+<div class="card">
+  <div class="card-header">
+    <span class="card-title">🕓 Version history</span>
+    <span class="text-muted text-sm">Last 10 saves</span>
+  </div>
+  <div class="table-wrap">
+  <table>
+    <thead>
+      <tr>
+        <th>Saved</th>
+        <th>By</th>
+        <th>Preview</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+    <% for (const v of versions) { %>
+      <tr>
+        <td class="text-sm text-muted" style="white-space:nowrap;"><%= new Date(v.created_at).toLocaleString('en-US', {timeZone:'America/Los_Angeles',dateStyle:'short',timeStyle:'short'}) %></td>
+        <td class="text-muted"><%= v.changed_by %></td>
+        <td style="font-family:monospace;font-size:12px;color:var(--text2);max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><%= v.content.slice(0,100) %>…</td>
+        <td>
+          <button type="button" onclick="restoreVersion('<%= v.id %>')" class="btn btn-secondary btn-sm">Restore</button>
+        </td>
+      </tr>
+    <% } %>
+    </tbody>
+  </table>
+  </div>
+</div>
+<% } %>
+
 <script>
-document.getElementById('apply-vapi-btn')?.addEventListener('click', async (e) => {
-  const btn = e.currentTarget;
-  btn.disabled = true; btn.textContent = 'Applying…';
+document.getElementById('apply-vapi-btn')?.addEventListener('click', async () => {
+  const btn = document.getElementById('apply-vapi-btn');
   const textarea = document.querySelector('[data-key="riley_system_prompt_override"]');
-  await fetch('/admin/settings/riley_system_prompt_override', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({value: textarea?.value || ''})});
+  const resultEl = document.getElementById('vapi-apply-result');
+  btn.disabled = true; btn.textContent = 'Applying…';
+  await fetch('/admin/settings/riley_system_prompt_override', {
+    method: 'POST', headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({value: textarea?.value || ''})
+  });
   const resp = await fetch('/admin/settings/persona/apply-to-vapi', {method:'POST'});
   const data = await resp.json();
-  const el = document.getElementById('vapi-apply-result');
-  if (el) el.textContent = resp.ok ? '✓ Applied to Vapi' : '✗ ' + (data.message || 'Failed');
+  if (resultEl) {
+    resultEl.innerHTML = resp.ok
+      ? '<span style="color:var(--success)">✓ Applied to Vapi — live on next call</span>'
+      : `<span style="color:var(--danger)">✗ ${data.message || 'Apply failed'}</span>`;
+  }
   btn.disabled = false; btn.textContent = 'Apply to Vapi';
 });
 
 document.getElementById('revert-btn')?.addEventListener('click', async () => {
-  if (!confirm('Clear the override and revert to the committed default prompt?')) return;
+  if (!confirm('Clear the override and revert to the committed default system prompt?')) return;
   await fetch('/admin/settings/persona/revert', {method:'POST'});
   window.location.reload();
 });
 
 async function restoreVersion(id) {
-  if (!confirm('Restore this version?')) return;
-  await fetch('/admin/settings/persona/restore/' + id, {method:'POST'});
-  window.location.reload();
+  if (!confirm('Restore this version to the editor? You'll still need to click Apply to Vapi.')) return;
+  const resp = await fetch('/admin/settings/persona/restore/' + id, {method:'POST'});
+  const data = await resp.json();
+  const textarea = document.querySelector('[data-key="riley_system_prompt_override"]');
+  if (textarea && data.content) textarea.value = data.content;
 }
 </script>
+  </div>
+</div>
