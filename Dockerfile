@@ -19,4 +19,4 @@ RUN npx tsc --noEmit
 
 EXPOSE 3000
 
-CMD ["sh", "-c", "node --version && which tsx && npx prisma db push --skip-generate && npx tsx src/index.ts"]
+CMD ["sh", "-c", "npx prisma db push --skip-generate && ./node_modules/.bin/tsx src/index.ts"]
