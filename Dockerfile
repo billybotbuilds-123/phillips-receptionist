@@ -1,6 +1,6 @@
 FROM node:20-slim
 
-# Cache bust: 2026-05-03-005731
+# Cache bust: 2026-05-03-010557
 RUN apt-get update && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
@@ -19,4 +19,4 @@ RUN npx tsc --noEmit
 
 EXPOSE 3000
 
-CMD ["sh", "-c", "npx prisma db push --skip-generate && ./node_modules/.bin/tsx src/index.ts"]
+CMD ["sh", "-c", "node --version && ./node_modules/.bin/tsx --version && npx prisma db push --skip-generate && ./node_modules/.bin/tsx src/index.ts 2>&1"]
