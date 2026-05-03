@@ -5,7 +5,7 @@
     "buildCommand": "npx prisma generate && npx tsc --noEmit"
   },
   "deploy": {
-    "startCommand": "npx prisma db push --skip-generate && npx tsx src/index.ts",
+    "startCommand": "npx prisma db push --skip-generate && npx tsx src/index.ts 2>&1",
     "restartPolicyType": "ON_FAILURE",
     "restartPolicyMaxRetries": 3
   }
