@@ -64,6 +64,8 @@ export async function adminIndexRoutes(app: FastifyInstance): Promise<void> {
     );
     const todayRevenue = ((todayBookings * feeCents) / 100).toFixed(2);
 
+    const csrfToken = await reply.generateCsrf();
+
     return reply.view("dashboard.ejs", {
       user: request.user,
       todayCalls,
@@ -75,6 +77,7 @@ export async function adminIndexRoutes(app: FastifyInstance): Promise<void> {
       pendingFollowUps,
       missingSettings,
       missingCount: missingSettings.length,
+      csrfToken,
       publicUrl: config.PUBLIC_URL,
     });
   });

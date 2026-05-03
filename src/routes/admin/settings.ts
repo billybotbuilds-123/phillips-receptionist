@@ -64,6 +64,7 @@ export async function adminSettingsRoutes(app: FastifyInstance): Promise<void> {
 
     const tabData = await getTabData(tab);
     const missingSettings = await settings.getMissingRequired();
+    const csrfToken = await reply.generateCsrf();
 
     const extraData: Record<string, unknown> = {};
 
@@ -98,6 +99,7 @@ export async function adminSettingsRoutes(app: FastifyInstance): Promise<void> {
       tabData,
       missingSettings,
       missingCount: missingSettings.length,
+      csrfToken,
       ...extraData,
     });
   });

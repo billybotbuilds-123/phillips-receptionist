@@ -22,8 +22,10 @@ export async function adminCallsRoutes(app: FastifyInstance): Promise<void> {
       db.call.count(),
     ]);
 
+    const csrfToken = await reply.generateCsrf();
     return reply.view("calls-list.ejs", {
       user: request.user,
+      csrfToken,
       calls,
       page,
       totalPages: Math.ceil(total / pageSize),
@@ -43,8 +45,10 @@ export async function adminCallsRoutes(app: FastifyInstance): Promise<void> {
 
     if (!call) return reply.status(404).view("404.ejs", { user: request.user });
 
+    const csrfToken2 = await reply.generateCsrf();
     return reply.view("call-detail.ejs", {
       user: request.user,
+      csrfToken: csrfToken2,
       call,
       publicUrl: config.PUBLIC_URL,
     });

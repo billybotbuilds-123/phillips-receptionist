@@ -7,6 +7,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <% if (typeof csrfToken !== 'undefined' && csrfToken) { %>
+  <meta name="csrf-token" content="<%= csrfToken %>" />
+  <% } %>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -345,9 +348,11 @@ document.addEventListener('DOMContentLoaded', () => {
       const feedback = document.querySelector(`[data-feedback="${key}"]`);
       const orig = btn.textContent;
       btn.disabled = true; btn.textContent = 'Saving…';
+      const csrfMeta = document.querySelector('meta[name="csrf-token"]');
+      const csrfToken = csrfMeta ? csrfMeta.getAttribute('content') : '';
       try {
         const resp = await fetch(`/admin/settings/${key}`, {
-          method: 'POST', headers: {'Content-Type':'application/json'},
+          method: 'POST', headers: {'Content-Type':'application/json', 'X-CSRF-Token': csrfToken},
           body: JSON.stringify({value: input.value})
         });
         const data = await resp.json();
@@ -376,7 +381,9 @@ document.addEventListener('DOMContentLoaded', () => {
         btn.textContent = 'Reveal'; revealed = false; return;
       }
       btn.disabled = true; btn.textContent = '…';
-      const resp = await fetch(`/admin/settings/reveal/${key}`);
+      const csrfMeta = document.querySelector('meta[name="csrf-token"]');
+      const csrfTok = csrfMeta ? csrfMeta.getAttribute('content') : '';
+      const resp = await fetch(`/admin/settings/reveal/${key}`, { headers: {'X-CSRF-Token': csrfTok} });
       const data = await resp.json();
       input.value = data.value || '';
       btn.textContent = 'Hide'; revealed = true; btn.disabled = false;
@@ -391,7 +398,9 @@ document.addEventListener('DOMContentLoaded', () => {
       const orig = btn.textContent;
       btn.disabled = true; btn.textContent = 'Testing…';
       try {
-        const resp = await fetch(`/admin/test-connection/${svc}`, {method:'POST'});
+        const csrfMeta2 = document.querySelector('meta[name="csrf-token"]');
+        const csrfTok2 = csrfMeta2 ? csrfMeta2.getAttribute('content') : '';
+        const resp = await fetch(`/admin/test-connection/${svc}`, {method:'POST', headers:{'X-CSRF-Token': csrfTok2}});
         const data = await resp.json();
         if (resultEl) {
           resultEl.innerHTML = data.ok
