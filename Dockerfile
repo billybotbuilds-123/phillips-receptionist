@@ -1,5 +1,6 @@
 FROM node:20-slim
 
+# Cache bust: 2026-05-03-v2
 RUN apt-get update && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
