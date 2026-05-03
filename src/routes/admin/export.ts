@@ -1,5 +1,4 @@
 import type { FastifyInstance } from "fastify";
-import type { Call, MessageLog } from "@prisma/client";
 import archiver from "archiver";
 import { db } from "../../db/client.js";
 import { logger } from "../../lib/logger.js";

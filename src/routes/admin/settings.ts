@@ -1,5 +1,4 @@
 import type { FastifyInstance } from "fastify";
-import type { PersonaVersion } from "@prisma/client";
 import { settings, SETTING_KEYS, type SettingKey } from "../../lib/settings.js";
 import { db } from "../../db/client.js";
 import { logger } from "../../lib/logger.js";
@@ -130,7 +129,7 @@ export async function adminSettingsRoutes(app: FastifyInstance): Promise<void> {
         orderBy: { created_at: "desc" },
       });
       if (allVersions.length > 10) {
-        const toDelete = allVersions.slice(10).map((v: PersonaVersion) => v.id);
+        const toDelete = allVersions.slice(10).map((v) => v.id);
         await db.personaVersion.deleteMany({ where: { id: { in: toDelete } } });
       }
     }

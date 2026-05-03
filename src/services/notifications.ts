@@ -21,7 +21,8 @@ export async function enqueueFailedJob(
   await db.failedJob.create({
     data: {
       type,
-      payload: payload as import("@prisma/client").Prisma.JsonObject,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      payload: payload as any,
       attempts: 0,
       next_retry_at: new Date(Date.now() + (BACKOFF_SCHEDULE_MS[0] ?? 60_000)),
     },

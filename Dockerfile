@@ -9,11 +9,11 @@ RUN npm ci
 
 COPY . .
 
+# Generate Prisma client first (required for type checking)
+RUN npx prisma generate
+
 # Type check only — MJML already compiled and committed
 RUN npx tsc --noEmit
-
-# Generate Prisma client
-RUN npx prisma generate
 
 EXPOSE 3000
 
