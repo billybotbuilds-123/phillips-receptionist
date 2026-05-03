@@ -1,3 +1,4 @@
+import type { Call } from "@prisma/client";
 import { db } from "../db/client.js";
 import { settings } from "../lib/settings.js";
 import { sendEmail } from "../services/gmail.js";
@@ -51,7 +52,7 @@ export async function sendDailySummary(): Promise<void> {
   const revenueDollars = ((bookings * feeCents) / 100).toFixed(2);
 
   const callsListBlock = calls
-    .map((c) => {
+    .map((c: (typeof calls)[number]) => {
       const name = c.parent_name ?? "Unknown";
       const grade = c.child_grade ?? "?";
       const urgency = c.urgency_level ?? "?";
