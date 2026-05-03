@@ -8,4 +8,4 @@ cmds = ["npm ci"]
 cmds = ["npx prisma generate", "npx tsc --noEmit"]
 
 [start]
-cmd = "npx prisma db push --skip-generate && npx tsx src/index.ts 2>&1"
+cmd = "echo 'Node:' $(node --version) && echo 'TSX:' $(npx tsx --version 2>&1 || echo NOT_FOUND) && npx prisma db push --skip-generate && npx tsx src/index.ts 2>&1"
