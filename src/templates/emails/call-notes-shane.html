@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>📋 Call Notes — {{parent_name}}</title>
+  <style>
+    body { font-family: Georgia, serif; background: #f9f9f7; margin: 0; padding: 20px; color: #222; }
+    .wrapper { max-width: 600px; margin: 0 auto; background: #fff; border-radius: 8px; padding: 32px; border: 1px solid #ddd; }
+    h2 { color: #1a3a5c; margin-top: 0; }
+    .label { font-weight: bold; color: #555; font-size: 13px; text-transform: uppercase; letter-spacing: 0.05em; }
+    .value { margin-bottom: 16px; font-size: 15px; }
+    .summary-box { background: #f0f5ff; border-left: 4px solid #3b6fd4; padding: 16px; border-radius: 4px; margin-bottom: 24px; }
+    .doc-link { display: inline-block; margin: 16px 0; padding: 12px 24px; background: #1a3a5c; color: #fff !important; text-decoration: none; border-radius: 6px; font-size: 14px; }
+    .transcript-section { margin-top: 32px; border-top: 1px solid #eee; padding-top: 24px; }
+    .transcript { font-family: monospace; font-size: 13px; background: #f5f5f5; padding: 16px; border-radius: 4px; white-space: pre-wrap; word-wrap: break-word; }
+    .footer { margin-top: 32px; font-size: 12px; color: #999; border-top: 1px solid #eee; padding-top: 16px; }
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+    <h2>📋 New Call — {{parent_name}}</h2>
+    <p style="color:#555; margin-top:-8px;">{{call_date}} &nbsp;·&nbsp; Duration: {{duration}}</p>
+
+    <div class="label">Parent</div>
+    <div class="value">
+      {{parent_name}}<br>
+      📧 <a href="mailto:{{parent_email}}">{{parent_email}}</a><br>
+      📱 <a href="tel:{{parent_phone}}">{{parent_phone}}</a>
+    </div>
+
+    <div class="label">Child</div>
+    <div class="value">{{child_name}} &nbsp;·&nbsp; Grade: {{child_grade}}</div>
+
+    <div class="label">Urgency</div>
+    <div class="value" style="font-weight:bold;">{{urgency_level}}</div>
+
+    <div class="label">Summary of Situation</div>
+    <div class="summary-box">{{summary_of_need}}</div>
+
+    <a href="{{doc_url}}" class="doc-link">📄 Open Google Doc Notes →</a>
+
+    <div class="transcript-section">
+      <div class="label">Full Call Transcript</div>
+      <div class="transcript">{{transcript}}</div>
+    </div>
+
+    <div class="footer">
+      Riley — Mr. Phillips Parent Advocate AI Receptionist<br>
+      This summary was auto-generated after the call ended.
+    </div>
+  </div>
+</body>
+</html>

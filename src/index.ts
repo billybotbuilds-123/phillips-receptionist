@@ -21,6 +21,7 @@ import { vapiRoutes } from "./routes/vapi.js";
 import { mcpRoutes } from "./routes/mcp.js";
 import { calendlyRoutes } from "./routes/calendly.js";
 import { twilioInboundRoutes } from "./routes/twilio-inbound.js";
+import { twilioVoiceRoutes } from "./routes/twilio-voice.js";
 import { adminIndexRoutes } from "./routes/admin/index.js";
 import { adminSettingsRoutes } from "./routes/admin/settings.js";
 import { adminCallsRoutes } from "./routes/admin/calls.js";
@@ -167,6 +168,7 @@ async function buildApp() {
   await app.register(mcpRoutes);
   await app.register(calendlyRoutes);
   await app.register(twilioInboundRoutes);
+  await app.register(twilioVoiceRoutes);
   await app.register(adminIndexRoutes);
   await app.register(adminSettingsRoutes);
   await app.register(adminCallsRoutes);

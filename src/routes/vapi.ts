@@ -11,7 +11,9 @@ import * as Sentry from "@sentry/node";
 import { db } from "../db/client.js";
 import { verifyVapiSignature } from "../lib/hmac.js";
 import { logger } from "../lib/logger.js";
+import { settings } from "../lib/settings.js";
 import { createCallDoc, appendTranscriptToDoc } from "../services/googleDocs.js";
+import { sendEmail } from "../services/gmail.js";
 import {
   enqueueFailedJob,
   sendUrgentEscalation,
@@ -114,6 +116,51 @@ export async function vapiRoutes(app: FastifyInstance): Promise<void> {
             doc_url: call.doc_url,
             transcript,
           });
+        }
+      }
+
+      // Email call notes + transcript to Shane after every completed call
+      // that has parent data captured. This fires regardless of whether the
+      // doc was created successfully — Shane always gets the transcript.
+      if (call.parent_name && call.parent_email !== null) {
+        try {
+          const notifEmail = await settings.get("shane_notification_email").catch(() => "");
+          if (notifEmail) {
+            const callDateStr = (call.ended_at ?? new Date()).toLocaleString("en-US", {
+              timeZone: "America/Los_Angeles",
+              year: "numeric",
+              month: "2-digit",
+              day: "2-digit",
+              hour: "2-digit",
+              minute: "2-digit",
+              hour12: true,
+            });
+            const durationStr = call.duration_seconds
+              ? `${Math.floor(call.duration_seconds / 60)}m ${call.duration_seconds % 60}s`
+              : "unknown";
+            await sendEmail({
+              to: notifEmail,
+              subject: `📋 Call Notes — ${call.parent_name} (${callDateStr} PT)`,
+              templateName: "call-notes-shane",
+              vars: {
+                parent_name: call.parent_name ?? "Unknown",
+                parent_email: call.parent_email ?? "not captured",
+                parent_phone: call.parent_phone ?? "not captured",
+                child_name: call.child_name ?? "not captured",
+                child_grade: call.child_grade ?? "not captured",
+                urgency_level: call.urgency_level ?? "unknown",
+                summary_of_need: call.summary_of_need ?? "(no summary captured)",
+                doc_url: call.doc_url ?? "#",
+                transcript: transcript || "(transcript not available)",
+                call_date: callDateStr,
+                duration: durationStr,
+              },
+            });
+            logger.info({ call_id: call.id }, "call notes email sent to Shane");
+          }
+        } catch (err) {
+          logger.error({ err: String(err), call_id: call.id }, "failed to send call notes email to Shane");
+          await enqueueFailedJob("call_notes_email", { call_id: call.id });
         }
       }
 

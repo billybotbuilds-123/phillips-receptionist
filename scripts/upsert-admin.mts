@@ -10,8 +10,8 @@ console.log('Existing users:', JSON.stringify(users));
 const hash = '$2b$12$xuCtfBgHeVwRmCkSE3i6d.5wtbo5zo5r./LjyzezsLRNvQjEm9ovG';
 await db.user.upsert({
   where: { username: 'shane' },
-  create: { username: 'shane', passwordHash: hash },
-  update: { passwordHash: hash }
+  create: { username: 'shane', password_hash: hash },
+  update: { password_hash: hash }
 });
 console.log('✅ User upserted');
 await db.$disconnect();
