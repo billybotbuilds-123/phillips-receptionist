@@ -68,6 +68,20 @@
         <div class="field-hint">Used to verify inbound webhooks from Vapi. Rotate if compromised.</div>
         <div data-feedback="vapi_webhook_secret" class="field-feedback"></div>
       </div>
+
+      <div class="field">
+        <label>
+          Vapi MCP secret (Bearer token)
+          <% if (missingSettings.includes('vapi_mcp_secret')) { %><span class="required-badge">required</span><% } %>
+        </label>
+        <div class="field-row">
+          <input type="text" data-key="vapi_mcp_secret" value="<%= tabData['vapi_mcp_secret'] || '' %>" class="mono" />
+          <button type="button" class="btn btn-secondary btn-sm" data-reveal-key="vapi_mcp_secret" style="white-space:nowrap;">Reveal</button>
+          <button type="button" class="btn btn-primary btn-sm" data-save-key="vapi_mcp_secret" style="white-space:nowrap;">Save</button>
+        </div>
+        <div class="field-hint">Bearer token Vapi sends on MCP tool calls (<code>/mcp</code>). Set this value in Vapi's MCP tool "Authorization" header as <code>Bearer &lt;value&gt;</code>.</div>
+        <div data-feedback="vapi_mcp_secret" class="field-feedback"></div>
+      </div>
     </div>
 
     <div class="action-bar">
@@ -82,10 +96,11 @@
 </div>
 
 <script>
+const csrf = () => document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
 document.getElementById('rotate-secret-btn')?.addEventListener('click', async () => {
   const btn = document.getElementById('rotate-secret-btn');
   btn.disabled = true; btn.textContent = 'Rotating…';
-  const resp = await fetch('/admin/settings/vapi/rotate-secret', {method:'POST'});
+  const resp = await fetch('/admin/settings/vapi/rotate-secret', {method:'POST', headers:{'X-CSRF-Token': csrf()}});
   const data = await resp.json();
   const el = document.getElementById('rotate-result');
   if (resp.ok) {

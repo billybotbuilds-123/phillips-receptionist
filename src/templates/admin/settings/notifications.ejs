@@ -83,11 +83,12 @@
 </div>
 
 <script>
+const csrf = () => document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
 document.getElementById('test-notif-btn')?.addEventListener('click', async () => {
   const btn = document.getElementById('test-notif-btn');
   const el = document.getElementById('test-notif-result');
   btn.disabled = true; btn.textContent = 'Sending…';
-  const resp = await fetch('/admin/test-notification', {method:'POST'});
+  const resp = await fetch('/admin/test-notification', {method:'POST', headers:{'X-CSRF-Token': csrf()}});
   el.innerHTML = resp.ok
     ? '<span style="color:var(--success)">✓ Test notification sent!</span>'
     : '<span style="color:var(--danger)">✗ Send failed — check your phone/email settings.</span>';

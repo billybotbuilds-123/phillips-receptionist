@@ -14,7 +14,7 @@ const SERVICES = ["anthropic", "vapi", "twilio", "elevenlabs", "calendly", "goog
 type Service = (typeof SERVICES)[number];
 
 const TAB_SETTINGS: Record<string, SettingKey[]> = {
-  "core-ai": ["anthropic_api_key", "vapi_api_key", "vapi_webhook_secret"],
+  "core-ai": ["anthropic_api_key", "vapi_api_key", "vapi_webhook_secret", "vapi_mcp_secret"],
   phone: ["twilio_account_sid", "twilio_auth_token", "twilio_phone_number"],
   voice: ["elevenlabs_api_key", "elevenlabs_voice_id"],
   google: [

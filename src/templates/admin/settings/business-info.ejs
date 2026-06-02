@@ -92,10 +92,11 @@
 </div>
 
 <script>
+const csrf = () => document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
 document.getElementById('preview-affirmation-btn')?.addEventListener('click', async (e) => {
   const btn = e.currentTarget;
   btn.disabled = true; btn.textContent = 'Generating…';
-  const resp = await fetch('/admin/settings/persona/affirmation-preview', {method:'POST'});
+  const resp = await fetch('/admin/settings/persona/affirmation-preview', {method:'POST', headers:{'X-CSRF-Token': csrf()}});
   const data = await resp.json();
   const container = document.getElementById('affirmation-preview');
   const lines = document.getElementById('affirmation-lines');

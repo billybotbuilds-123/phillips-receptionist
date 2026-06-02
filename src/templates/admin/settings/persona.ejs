@@ -75,16 +75,17 @@
 <% } %>
 
 <script>
+const csrf = () => document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
 document.getElementById('apply-vapi-btn')?.addEventListener('click', async () => {
   const btn = document.getElementById('apply-vapi-btn');
   const textarea = document.querySelector('[data-key="riley_system_prompt_override"]');
   const resultEl = document.getElementById('vapi-apply-result');
   btn.disabled = true; btn.textContent = 'Applying…';
   await fetch('/admin/settings/riley_system_prompt_override', {
-    method: 'POST', headers: {'Content-Type':'application/json'},
+    method: 'POST', headers: {'Content-Type':'application/json', 'X-CSRF-Token': csrf()},
     body: JSON.stringify({value: textarea?.value || ''})
   });
-  const resp = await fetch('/admin/settings/persona/apply-to-vapi', {method:'POST'});
+  const resp = await fetch('/admin/settings/persona/apply-to-vapi', {method:'POST', headers:{'X-CSRF-Token': csrf()}});
   const data = await resp.json();
   if (resultEl) {
     resultEl.innerHTML = resp.ok
@@ -96,13 +97,13 @@ document.getElementById('apply-vapi-btn')?.addEventListener('click', async () =>
 
 document.getElementById('revert-btn')?.addEventListener('click', async () => {
   if (!confirm('Clear the override and revert to the committed default system prompt?')) return;
-  await fetch('/admin/settings/persona/revert', {method:'POST'});
+  await fetch('/admin/settings/persona/revert', {method:'POST', headers:{'X-CSRF-Token': csrf()}});
   window.location.reload();
 });
 
 async function restoreVersion(id) {
-  if (!confirm('Restore this version to the editor? You'll still need to click Apply to Vapi.')) return;
-  const resp = await fetch('/admin/settings/persona/restore/' + id, {method:'POST'});
+  if (!confirm('Restore this version to the editor? You\'ll still need to click Apply to Vapi.')) return;
+  const resp = await fetch('/admin/settings/persona/restore/' + id, {method:'POST', headers:{'X-CSRF-Token': csrf()}});
   const data = await resp.json();
   const textarea = document.querySelector('[data-key="riley_system_prompt_override"]');
   if (textarea && data.content) textarea.value = data.content;

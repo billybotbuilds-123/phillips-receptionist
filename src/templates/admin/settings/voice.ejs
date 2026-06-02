@@ -63,10 +63,11 @@
 </div>
 
 <script>
+const csrf = () => document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
 document.getElementById('preview-voice-btn')?.addEventListener('click', async () => {
   const btn = document.getElementById('preview-voice-btn');
   btn.disabled = true; btn.textContent = 'Generating…';
-  const resp = await fetch('/admin/elevenlabs/preview', {method:'POST'});
+  const resp = await fetch('/admin/elevenlabs/preview', {method:'POST', headers:{'X-CSRF-Token': csrf()}});
   const container = document.getElementById('preview-audio-container');
   if (resp.ok) {
     const blob = await resp.blob();

@@ -93,6 +93,7 @@
 <% } %>
 
 <script>
+const csrf = () => document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
 document.getElementById('change-password-form')?.addEventListener('submit', async (e) => {
   e.preventDefault();
   const newPw = document.getElementById('new-password').value;
@@ -103,7 +104,7 @@ document.getElementById('change-password-form')?.addEventListener('submit', asyn
     return;
   }
   const resp = await fetch('/admin/account/change-password', {
-    method: 'POST', headers: {'Content-Type':'application/json'},
+    method: 'POST', headers: {'Content-Type':'application/json', 'X-CSRF-Token': csrf()},
     body: JSON.stringify({current_password: document.getElementById('current-password').value, new_password: newPw})
   });
   const data = await resp.json();
@@ -115,7 +116,7 @@ document.getElementById('change-password-form')?.addEventListener('submit', asyn
 
 async function revokeSession(id) {
   if (!confirm('Revoke this session?')) return;
-  await fetch('/admin/account/revoke-session/' + id, {method:'POST'});
+  await fetch('/admin/account/revoke-session/' + id, {method:'POST', headers:{'X-CSRF-Token': csrf()}});
   window.location.reload();
 }
 </script>
