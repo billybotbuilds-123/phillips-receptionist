@@ -88,7 +88,7 @@ async function buildApp() {
       httpOnly: true,
       secure: config.NODE_ENV === "production",
       sameSite: "lax",
-      maxAge: 2 * 60 * 60, // seconds — @fastify/secure-session maxAge is seconds
+      maxAge: 30 * 24 * 60 * 60, // 30 days — long-lived admin session
     },
   });
 

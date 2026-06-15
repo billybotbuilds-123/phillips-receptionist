@@ -359,6 +359,9 @@ document.addEventListener('DOMContentLoaded', () => {
         if (resp.ok) {
           if (feedback) { feedback.textContent = '✓ Saved'; feedback.className = 'field-feedback success'; }
           setTimeout(() => { if (feedback) feedback.textContent = ''; }, 3000);
+        } else if (resp.status === 403 && data.error === 'csrf_failed') {
+          if (feedback) { feedback.textContent = 'Session expired — reloading page, please try again.'; feedback.className = 'field-feedback error'; }
+          setTimeout(() => location.reload(), 1500);
         } else {
           if (feedback) { feedback.textContent = data.message || data.error || 'Save failed'; feedback.className = 'field-feedback error'; }
         }

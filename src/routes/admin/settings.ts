@@ -114,6 +114,11 @@ export async function adminSettingsRoutes(app: FastifyInstance): Promise<void> {
     const body = request.body as Record<string, string>;
     const value = body["value"] ?? "";
 
+    // Reject masked values — user clicked Save without revealing/replacing the field
+    if (value.includes("••")) {
+      return reply.status(400).send({ error: "masked_value", message: "Clear the field and type the new value before saving." });
+    }
+
     const validationError = validateSettingValue(key as SettingKey, value);
     if (validationError) {
       return reply.status(400).send({ error: "validation_error", message: validationError });

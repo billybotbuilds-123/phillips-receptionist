@@ -63,7 +63,7 @@
           <% if (missingSettings.includes('calendly_event_type_uri')) { %><span class="required-badge">required</span><% } %>
         </label>
         <div class="field-row">
-          <input type="text" data-key="calendly_event_type_uri" value="<%= tabData['calendly_event_type_uri'] || '' %>" placeholder="https://api.calendly.com/event_types/xxxxx" />
+          <input type="text" data-key="calendly_event_type_uri" value="<%= tabData['calendly_event_type_uri'] || '' %>" placeholder="https://calendly.com/your-username/15-minute-consultation" />
           <button type="button" class="btn btn-primary btn-sm" data-save-key="calendly_event_type_uri" style="white-space:nowrap;">Save</button>
         </div>
         <div class="field-hint">Paste the URI from your Calendly "15-min consultation" event type details.</div>
