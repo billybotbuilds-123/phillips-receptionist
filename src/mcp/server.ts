@@ -76,7 +76,14 @@ export function buildRileyMcpServer(ctx: CallContext): McpServer {
         parent_email: z.string().email(),
         parent_phone: z
           .string()
-          .regex(/^\+1\d{10}$/, "must be E.164 US format e.g. +15621234567"),
+          .transform((v) => {
+            // Normalize to E.164: strip all non-digits, then prepend +1
+            const digits = v.replace(/\D/g, "");
+            if (digits.length === 11 && digits.startsWith("1")) return `+${digits}`;
+            if (digits.length === 10) return `+1${digits}`;
+            return v; // pass through if unexpected length; regex below will catch it
+          })
+          .refine((v) => /^\+1\d{10}$/.test(v), "must be a 10-digit US phone number"),
         child_name: z.string().min(1).max(80),
         child_grade: z.string().min(1).max(40),
         summary_of_need: z.string().min(10).max(2000),
