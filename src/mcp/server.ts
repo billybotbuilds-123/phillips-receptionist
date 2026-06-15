@@ -72,10 +72,13 @@ export function buildRileyMcpServer(ctx: CallContext): McpServer {
       description:
         "Send Mr. Phillips's Calendly link by email and SMS to the parent, and create a call-notes Google Doc. Call this once per conversation after you have gathered the parent's name, email, phone, child name, child grade, a brief summary of what's going on, and assessed urgency.",
       inputSchema: {
-        parent_name: z.string().min(1).max(120),
-        parent_email: z.string().email(),
+        parent_name: z.string().min(1).max(120)
+          .describe("Full name of the parent or guardian you spoke with. Example: 'Maria Garcia'"),
+        parent_email: z.string().email()
+          .describe("Parent's email address exactly as they stated it. Join spoken letters into a valid email. Example: 'maria.garcia@gmail.com'"),
         parent_phone: z
           .string()
+          .describe("Parent's phone number. Use the caller's phone number from the call. Join spoken digits into a 10-digit number. Example: '5623015061' or '+15623015061'")
           .transform((v) => {
             // Normalize to E.164: strip all non-digits, then prepend +1
             const digits = v.replace(/\D/g, "");
@@ -84,10 +87,14 @@ export function buildRileyMcpServer(ctx: CallContext): McpServer {
             return v; // pass through if unexpected length; regex below will catch it
           })
           .refine((v) => /^\+1\d{10}$/.test(v), "must be a 10-digit US phone number"),
-        child_name: z.string().min(1).max(80),
-        child_grade: z.string().min(1).max(40),
-        summary_of_need: z.string().min(10).max(2000),
-        urgency_level: z.enum(["low", "medium", "high", "crisis"]),
+        child_name: z.string().min(1).max(80)
+          .describe("First name of the parent's child. Example: 'Josh'"),
+        child_grade: z.string().min(1).max(40)
+          .describe("Grade level of the child. Example: '7th grade' or 'Kindergarten'"),
+        summary_of_need: z.string().min(10).max(2000)
+          .describe("A 2-4 sentence summary of the parent's situation and what they need help with. Include the key IEP issues, services in dispute, and what outcome they are seeking."),
+        urgency_level: z.enum(["low", "medium", "high", "crisis"])
+          .describe("Urgency: 'low' = general inquiry, 'medium' = ongoing issue, 'high' = deadline within 2 weeks or services actively denied, 'crisis' = child safety or meeting within 48 hours"),
       },
     },
     async (args) => {
