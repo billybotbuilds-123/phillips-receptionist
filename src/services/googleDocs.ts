@@ -57,7 +57,7 @@ export async function createCallDoc(data: CallDocData): Promise<string> {
   const docs = google.docs({ version: "v1", auth });
   const drive = google.drive({ version: "v3", auth });
 
-  const folderId = await settings.get("google_drive_notes_folder_id");
+  const folderId = await settings.get("google_drive_notes_folder_id").catch(() => "");
   const dateStr = data.callDate.toLocaleString("en-US", {
     timeZone: "America/Los_Angeles",
     year: "numeric",
@@ -88,16 +88,18 @@ export async function createCallDoc(data: CallDocData): Promise<string> {
   const docId = createResp.data.documentId;
   if (!docId) throw new Error("failed to create doc: no documentId");
 
-  // Move to the configured folder.
-  const file = await drive.files.get({ fileId: docId, fields: "parents" });
-  const prevParents = (file.data.parents ?? []).join(",");
-  await drive.files.update({
-    fileId: docId,
-    addParents: folderId,
-    removeParents: prevParents,
-    requestBody: {},
-    fields: "id, parents",
-  });
+  // Move to the configured folder (optional — skip if not configured).
+  if (folderId) {
+    const file = await drive.files.get({ fileId: docId, fields: "parents" });
+    const prevParents = (file.data.parents ?? []).join(",");
+    await drive.files.update({
+      fileId: docId,
+      addParents: folderId,
+      removeParents: prevParents,
+      requestBody: {},
+      fields: "id, parents",
+    });
+  }
 
   if (content) {
     await docs.documents.batchUpdate({
