@@ -74,11 +74,17 @@ export function buildRileyMcpServer(ctx: CallContext): McpServer {
       inputSchema: {
         parent_name: z.string().min(1).max(120)
           .describe("Full name of the parent or guardian you spoke with. Example: 'Maria Garcia'"),
-        parent_email: z.string().email()
-          .describe("Parent's email address exactly as they stated it. Join spoken letters into a valid email. Example: 'maria.garcia@gmail.com'"),
+        parent_email: z
+          .string()
+          .max(200)
+          .describe("Parent's email address exactly as they stated it, or an empty string if they declined to provide one. Join spoken letters into a valid email. Example: 'maria.garcia@gmail.com'")
+          .refine(
+            (v) => v === "" || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v),
+            "must be a valid email address or an empty string",
+          ),
         parent_phone: z
           .string()
-          .describe("Parent's phone number. Use the caller's phone number from the call. Join spoken digits into a 10-digit number. Example: '5623015061' or '+15623015061'")
+          .describe("Parent's 10-digit US phone number, e.g. '5621234567'. This MUST be a real numeric phone number — join the spoken digits into a 10-digit number. NEVER pass 'caller_id', 'unknown', or any non-numeric placeholder text. If you do not have the parent's number, ask them for it before calling this tool. Example: '5623015061' or '+15623015061'")
           .transform((v) => {
             // Normalize to E.164: strip all non-digits, then prepend +1
             const digits = v.replace(/\D/g, "");
@@ -156,6 +162,11 @@ export function buildRileyMcpServer(ctx: CallContext): McpServer {
           calendly_url: calendlyUrl,
         };
 
+        // Only attempt the email if the parent actually gave us an address.
+        // If they declined, args.parent_email is "" — sending to an empty
+        // recipient would fail and (previously) trip the escalation logic.
+        const emailEnabled = Boolean(args.parent_email);
+
         const [docResult, emailResult, smsResult] = await Promise.allSettled([
           createCallDoc({
             parentName: args.parent_name,
@@ -167,12 +178,14 @@ export function buildRileyMcpServer(ctx: CallContext): McpServer {
             urgencyLevel: args.urgency_level,
             callDate: new Date(),
           }),
-          sendEmail({
-            to: args.parent_email,
-            subject: "Here's your scheduling link for Mr. Phillips",
-            templateName: "booking-link",
-            vars: emailVars,
-          }),
+          emailEnabled
+            ? sendEmail({
+                to: args.parent_email,
+                subject: "Here's your scheduling link for Mr. Phillips",
+                templateName: "booking-link",
+                vars: emailVars,
+              })
+            : Promise.resolve(null),
           sendSms({
             to: args.parent_phone,
             templateName: "booking-link",
@@ -205,7 +218,10 @@ export function buildRileyMcpServer(ctx: CallContext): McpServer {
           });
         }
 
-        if (emailResult.status === "fulfilled") {
+        if (!emailEnabled) {
+          // Parent declined to give an email — nothing to send or log.
+          logger.info({ call_id: callId }, "booking email skipped (no email provided)");
+        } else if (emailResult.status === "fulfilled" && emailResult.value) {
           updates["booking_email_sent_at"] = new Date();
           await db.messageLog.create({
             data: {
@@ -220,7 +236,13 @@ export function buildRileyMcpServer(ctx: CallContext): McpServer {
           });
         } else {
           logger.error(
-            { err: String(emailResult.reason), call_id: callId },
+            {
+              err:
+                emailResult.status === "rejected"
+                  ? String(emailResult.reason)
+                  : "unknown",
+              call_id: callId,
+            },
             "booking email failed",
           );
           await db.messageLog.create({
@@ -231,7 +253,10 @@ export function buildRileyMcpServer(ctx: CallContext): McpServer {
               template: "booking-link",
               recipient: args.parent_email,
               status: "failed",
-              error: String(emailResult.reason).slice(0, 500),
+              error:
+                emailResult.status === "rejected"
+                  ? String(emailResult.reason).slice(0, 500)
+                  : null,
             },
           });
         }
@@ -271,11 +296,16 @@ export function buildRileyMcpServer(ctx: CallContext): McpServer {
           await db.call.update({ where: { id: call.id }, data: updates });
         }
 
-        const emailFailed = emailResult.status === "rejected";
-        const smsFailed =
-          smsResult.status === "rejected" ||
-          (smsResult.status === "fulfilled" && !smsResult.value.sid);
-        if (emailFailed && smsFailed) {
+        // Escalate only if the booking link reached the parent on NO channel.
+        // A skipped email (parent declined) doesn't count as a failure — but
+        // if it was skipped AND the SMS failed, nothing got through.
+        const emailDelivered =
+          emailEnabled &&
+          emailResult.status === "fulfilled" &&
+          Boolean(emailResult.value);
+        const smsDelivered =
+          smsResult.status === "fulfilled" && Boolean(smsResult.value.sid);
+        if (!emailDelivered && !smsDelivered) {
           await maybeEscalate(call.id, callId, {
             reason: "booking_link_send_failed",
             parent_name: args.parent_name,
